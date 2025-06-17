@@ -85,19 +85,27 @@ def main():
         logger.info("STEP 1: Analyzing example output")
         logger.info("="*60)
         
-        # analyzer = ExampleAnalyzer(args.example)
-        # facts = analyzer.analyze()
-        logger.warning("ExampleAnalyzer not yet implemented - skipping")
+        from src.example_analyzer import ExampleAnalyzer
+        analyzer = ExampleAnalyzer(args.example)
+        facts = analyzer.analyze()
         
         # Step 2: Initialize components
         logger.info("="*60)
         logger.info("STEP 2: Initializing components")
         logger.info("="*60)
         
-        # generator = OptionGenerator(facts, config)
-        # validator = OutputValidator(args.example)
-        # refiner = ParameterRefiner(config)
-        logger.warning("Components not yet implemented - skipping")
+        from src.option_generator import OptionGenerator
+        from src.output_validator import OutputValidator
+        from src.parameter_refiner import ParameterRefiner
+        
+        generator = OptionGenerator(facts, config)
+        validator = OutputValidator(args.example)
+        refiner = ParameterRefiner(config)
+        
+        # Track best result
+        best_score = 0.0
+        best_iteration = 0
+        success_threshold = config['feedback_loop']['convergence_threshold']
         
         # Step 3: Run feedback loop
         logger.info("="*60)
@@ -110,35 +118,71 @@ def main():
             logger.info(f"{'='*60}")
             
             # Generate attempt
-            # generated = generator.generate(start_date, end_date)
+            generated = generator.generate()
             
             # Validate
-            # results = validator.validate(generated)
-            
-            # Check success
-            # if validator.is_success(results):
-            #     logger.info("SUCCESS! Output matches example.")
-            #     break
-            
-            # Refine parameters
-            # new_params = refiner.refine(generator.params, results)
-            # generator.update_params(new_params)
+            results = validator.validate(generated)
+            current_score = results.get('overall_score', 0.0)
             
             # Save iteration output
-            # output_path = f"{args.output_dir}/iteration_{iteration:03d}.csv"
-            # generated.to_csv(output_path, index=False)
+            output_path = f"{args.output_dir}/iteration_{iteration:03d}.csv"
+            generated.to_csv(output_path, index=False)
+            logger.info(f"Saved iteration {iteration} to {output_path}")
             
-            logger.warning("Feedback loop not yet implemented - breaking")
-            break
+            # Track best
+            if current_score > best_score:
+                best_score = current_score
+                best_iteration = iteration
+                # Save best result
+                best_path = f"{args.output_dir}/best_result.csv"
+                generated.to_csv(best_path, index=False)
+            
+            logger.info(f"Iteration {iteration} score: {current_score:.2%}")
+            logger.info(f"Best score so far: {best_score:.2%} (iteration {best_iteration})")
+            
+            # Check success
+            if validator.is_success(results, success_threshold):
+                logger.info("SUCCESS! Output matches example.")
+                # Save final result
+                final_path = f"{args.output_dir}/final_result.csv"
+                generated.to_csv(final_path, index=False)
+                break
+            
+            # Refine parameters
+            new_params = refiner.refine(generator.get_params(), results)
+            generator.update_params(new_params)
+            
+            # Early stopping if no improvement
+            convergence_info = refiner.get_convergence_info()
+            if convergence_info['stuck_count'] > 10:
+                logger.warning("No improvement for 10 iterations, stopping early")
+                break
         
         # Generate final report
         logger.info("="*60)
         logger.info("Generating final report")
         logger.info("="*60)
         
-        # validator.create_comparison_report()
+        # Create comparison report with best result
+        best_result_path = f"{args.output_dir}/best_result.csv"
+        if Path(best_result_path).exists():
+            import pandas as pd
+            best_df = pd.read_csv(best_result_path)
+            report_path = validator.create_comparison_report(best_df)
+            logger.info(f"Comparison report saved to: {report_path}")
         
-        logger.info("Process completed!")
+        # Save refinement history
+        refiner.save_history()
+        
+        # Summary
+        logger.info(f"Process completed after {iteration} iterations")
+        logger.info(f"Best score achieved: {best_score:.2%}")
+        
+        if best_score >= success_threshold:
+            logger.info("✅ SUCCESS: Achieved target match!")
+        else:
+            logger.warning(f"❌ Did not reach target ({success_threshold:.1%})")
+            logger.info("Check logs and validation results for improvements needed")
         
     except KeyboardInterrupt:
         logger.warning("Process interrupted by user")

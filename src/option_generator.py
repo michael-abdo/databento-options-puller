@@ -81,8 +81,9 @@ class OptionGenerator:
         # Create base dataframe with dates
         df = self._create_date_dataframe(start_date, end_date)
         
-        # Add futures prices (even though example doesn't have them)
-        if self.config['stub_data']['use_stub']:
+        # Add futures prices only if requested
+        include_futures = self.params.get('include_futures_price', True)
+        if self.config['stub_data']['use_stub'] and include_futures:
             df = self._add_stub_futures_prices(df)
         
         # Add each option based on facts
@@ -100,15 +101,38 @@ class OptionGenerator:
         start = parse_date(start_date)
         end = parse_date(end_date)
         
-        # Generate trading days
-        trading_days = generate_trading_days(start, end)
+        # Check if we need exact row count
+        exact_count = self.params.get('exact_row_count')
+        
+        if exact_count:
+            # Create exact number of dates (including weekends if needed)
+            date_range = pd.date_range(start=start, periods=exact_count, freq='D')
+            trading_days = [d.to_pydatetime() for d in date_range]
+            logger.info(f"Created exact {exact_count} days including weekends")
+        else:
+            # Generate trading days
+            trading_days = generate_trading_days(start, end)
+            logger.info(f"Created {len(trading_days)} trading days")
+        
+        # Format dates with specified format
+        date_format = self.params.get('date_format', '%m/%d/%y')
+        
+        # Handle zero-padding format
+        if date_format == "%-m/%-d/%y":
+            # No zero padding format (Unix style)
+            formatted_dates = []
+            for d in trading_days:
+                formatted = f"{d.month}/{d.day}/{d.year % 100:02d}"
+                formatted_dates.append(formatted)
+        else:
+            formatted_dates = [d.strftime(date_format) for d in trading_days]
         
         # Create dataframe
         df = pd.DataFrame({
-            'timestamp': [format_date(d) for d in trading_days]
+            'timestamp': formatted_dates
         })
         
-        logger.info(f"Created date dataframe with {len(df)} trading days")
+        logger.info(f"Created date dataframe with {len(df)} rows")
         
         return df
     
