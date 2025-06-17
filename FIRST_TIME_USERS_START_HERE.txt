@@ -1,0 +1,35 @@
+=====================================================
+      DATABENTO OPTIONS PULLER - FIRST TIME SETUP
+=====================================================
+
+Welcome! This tool downloads historical options data.
+
+TO GET STARTED:
+
+1. EASIEST WAY (Mac Users):
+   - Double-click the file "START_HERE.command"
+   - Everything will be set up automatically
+   - You'll be asked for your API key
+
+2. USING TERMINAL:
+   - Open Terminal
+   - Type: python3 easy_setup.py
+   - Press Enter
+
+WHAT HAPPENS NEXT:
+- You'll be asked if you have a Databento API key
+- If not, we'll help you get one (it's free to start)
+- The setup takes about 2-3 minutes
+- Then you can start downloading data!
+
+NO API KEY? NO PROBLEM!
+- The tool works in "demo mode" without a key
+- You can test everything before signing up
+- When ready, get a free key at databento.com
+
+NEED HELP?
+- See README_SIMPLE.md for detailed instructions
+- All error messages explain what to do
+- The setup process guides you step-by-step
+
+=====================================================
