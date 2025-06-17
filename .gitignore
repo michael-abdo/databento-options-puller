@@ -1,49 +1,43 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
-env/
+
+# Virtual Environment
 venv/
+env/
 ENV/
-.venv
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-.mypy_cache/
-
-# Project specific
-logs/
-output/
-*.log
-iteration_*.csv
 
 # IDE
-.vscode/
 .idea/
+.vscode/
 *.swp
-*.swo
-*~
 
 # OS
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
+
+# Logs
+logs/*.log
+*.log
+
+# Output files
+output/*.csv
+*.csv.bak
+
+# Cache
+.cache/
+.pytest_cache/
+
+# Coverage
+.coverage
+htmlcov/
+
+# Environment variables
+.env
+.env.local
 
 # Temporary files
 *.tmp
+*.temp
 *.bak
-*.cache
-
-# API Keys / Secrets
-config/secrets.yaml
-config/api_keys.yaml
-.env
