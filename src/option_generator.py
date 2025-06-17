@@ -19,6 +19,10 @@ sys.path.append(str(Path(__file__).parent.parent))
 from utils.date_utils import parse_date, format_date, generate_trading_days
 from utils.symbol_utils import build_option_symbol, parse_option_symbol
 from utils.logging_config import get_logger
+from src.databento_client import DatabentoBridge
+from src.delta_calculator import DeltaCalculator
+from src.futures_manager import FuturesManager
+from src.options_manager import OptionsManager
 
 logger = get_logger('generator')
 
@@ -26,16 +30,18 @@ logger = get_logger('generator')
 class OptionGenerator:
     """Generate options data based on hypothesis and extracted facts."""
     
-    def __init__(self, facts: Dict, config: Dict = None):
+    def __init__(self, facts: Dict, config: Dict = None, use_real_data: bool = False):
         """
         Initialize generator with facts from analyzer and configuration.
         
         Args:
             facts: Facts extracted by ExampleAnalyzer
             config: Configuration dictionary
+            use_real_data: Whether to use real Databento data instead of stubs
         """
         self.facts = facts
         self.config = config or self._load_default_config()
+        self.use_real_data = use_real_data
         
         # Extract key parameters
         self.params = {
@@ -44,8 +50,24 @@ class OptionGenerator:
             'months_ahead': self.config['option_selection']['months_ahead'],
             'volatility': self.config['market']['volatility'],
             'risk_free_rate': self.config['market']['risk_free_rate'],
-            'use_stub': self.config['stub_data']['use_stub']
+            'use_stub': self.config['stub_data']['use_stub'] and not use_real_data
         }
+        
+        # Initialize real data components if needed
+        if self.use_real_data:
+            self.databento_client = DatabentoBridge()
+            self.delta_calculator = DeltaCalculator(self.params['risk_free_rate'])
+            self.futures_manager = FuturesManager()
+            self.options_manager = OptionsManager(
+                self.databento_client, self.delta_calculator, self.futures_manager
+            )
+            logger.info("Initialized with real data components")
+        else:
+            self.databento_client = None
+            self.delta_calculator = None
+            self.futures_manager = None
+            self.options_manager = None
+            logger.info("Initialized with stub data mode")
         
         logger.info(f"Initialized OptionGenerator with params: {self.params}")
         
@@ -77,13 +99,56 @@ class OptionGenerator:
             end_date = self.facts['basic_info']['date_range']['end']
             
         logger.info(f"Date range: {start_date} to {end_date}")
+        logger.info(f"Using {'real data' if self.use_real_data else 'stub data'}")
+        
+        if self.use_real_data:
+            return self._generate_with_real_data(start_date, end_date)
+        else:
+            return self._generate_with_stub_data(start_date, end_date)
+    
+    def _generate_with_real_data(self, start_date: str, end_date: str) -> pd.DataFrame:
+        """Generate data using real Databento API and delta calculations."""
+        logger.info("Generating with real Databento data")
+        
+        # Create base dataframe with dates
+        df = self._create_date_dataframe(start_date, end_date)
+        
+        # Get monthly option selections using real strategy
+        selected_options = self.options_manager.identify_monthly_options(start_date, end_date)
+        
+        if not selected_options:
+            logger.warning("No options selected by real strategy")
+            return df
+        
+        logger.info(f"Real strategy selected {len(selected_options)} options")
+        
+        # Add each selected option's price data
+        for option_info in selected_options:
+            symbol = option_info['symbol']
+            logger.info(f"Adding real data for {symbol}")
+            
+            # Get price history from Databento
+            price_data = self.options_manager.get_option_price_history(
+                symbol, 
+                option_info['start_trading'],
+                option_info['end_trading']
+            )
+            
+            # Add to main dataframe
+            df = self._merge_option_prices(df, symbol, price_data, option_info)
+        
+        return df
+    
+    def _generate_with_stub_data(self, start_date: str, end_date: str) -> pd.DataFrame:
+        """Generate data using stub/mock data (original implementation)."""
+        logger.info("Generating with stub data")
         
         # Create base dataframe with dates
         df = self._create_date_dataframe(start_date, end_date)
         
         # Add futures prices only if requested
         include_futures = self.params.get('include_futures_price', True)
-        if self.config['stub_data']['use_stub'] and include_futures:
+        if self.params['use_stub'] and include_futures:
             df = self._add_stub_futures_prices(df)
         
         # Add each option based on facts
@@ -92,6 +157,60 @@ class OptionGenerator:
             df = self._add_option_data(df, symbol)
         
         logger.info(f"Generated dataframe with {len(df)} rows, {len(df.columns)} columns")
+        
+        return df
+    
+    def _merge_option_prices(self, df: pd.DataFrame, symbol: str, 
+                           price_data: pd.DataFrame, option_info: Dict) -> pd.DataFrame:
+        """
+        Merge option price data into main dataframe.
+        
+        Args:
+            df: Main dataframe with dates
+            symbol: Option symbol
+            price_data: Price data from Databento
+            option_info: Option metadata
+            
+        Returns:
+            Updated dataframe
+        """
+        if price_data.empty:
+            logger.warning(f"No price data for {symbol}")
+            # Add empty column
+            df[symbol] = np.nan
+            return df
+        
+        logger.debug(f"Merging {len(price_data)} price records for {symbol}")
+        
+        # Ensure symbol column exists
+        if symbol not in df.columns:
+            df[symbol] = np.nan
+        
+        # Match dates and fill prices
+        for _, price_row in price_data.iterrows():
+            price_date = price_row['date']
+            close_price = price_row['close']
+            
+            # Format date to match main dataframe
+            if 'timestamp' in df.columns:
+                # Convert price_date to same format as main df
+                date_format = self.params.get('date_format', '%m/%d/%y')
+                if date_format == "%-m/%-d/%y":
+                    # No zero padding
+                    formatted_date = f"{price_date.month}/{price_date.day}/{str(price_date.year)[-2:]}"
+                else:
+                    formatted_date = price_date.strftime(date_format)
+                
+                # Find matching row
+                matching_rows = df[df['timestamp'] == formatted_date]
+                
+                if not matching_rows.empty:
+                    df.loc[matching_rows.index, symbol] = close_price
+                    logger.debug(f"Set {symbol} price on {formatted_date}: ${close_price:.2f}")
+        
+        # Log how many prices were set
+        non_null_count = df[symbol].notna().sum()
+        logger.info(f"Set {non_null_count} prices for {symbol}")
         
         return df
     

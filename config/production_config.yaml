@@ -1,0 +1,184 @@
+# Production Configuration for Databento Options Puller
+# This file contains optimized settings for production use
+
+# API Configuration
+databento:
+  api_key: ${DATABENTO_API_KEY}  # Set via environment variable
+  dataset: "GLBX.MDP3"           # CME Globex MDP 3.0
+  schema: "ohlcv-1d"             # Daily OHLCV bars
+  timeout: 30                    # API timeout in seconds
+  max_retries: 3                 # Retry failed requests
+  retry_delay: 2                 # Initial retry delay (exponential backoff)
+
+# Strategy Parameters
+strategy:
+  target_delta: 0.15             # Target 15-delta options
+  delta_tolerance: 0.02          # Accept deltas in [0.13, 0.17]
+  months_ahead: 2                # Roll to M+2 expiration
+  roll_day: 1                    # First trading day of month
+  
+  # Option selection criteria
+  min_volume: 10                 # Minimum daily volume
+  min_open_interest: 50          # Minimum open interest
+  
+  # Fallback options
+  fallback_enabled: true         # Use fallback if no 15-delta found
+  fallback_deltas: [0.10, 0.20, 0.25]  # Alternative delta targets
+
+# Risk Parameters
+risk:
+  risk_free_rate: 0.05           # 5% annual risk-free rate
+  
+  # Volatility estimation
+  volatility_method: "combined"   # "historical", "implied", or "combined"
+  historical_window: 30          # Days for historical volatility
+  implied_weight: 0.7            # Weight for implied vol in combined method
+  
+  # Volatility bounds
+  min_volatility: 0.10           # 10% minimum
+  max_volatility: 1.00           # 100% maximum
+  default_volatility: 0.30       # 30% fallback
+
+# Data Processing
+processing:
+  # Memory management
+  chunk_size: "1M"               # Process in monthly chunks
+  max_memory_gb: 4               # Maximum memory usage
+  
+  # Parallel processing
+  parallel_enabled: true         # Enable parallel processing
+  max_workers: 4                 # Number of worker threads
+  
+  # Data validation
+  validate_prices: true          # Check for negative/zero prices
+  max_price_change: 0.50         # Flag 50%+ daily changes
+  
+  # Missing data handling
+  forward_fill_limit: 3          # Max days to forward fill
+  interpolate_method: "linear"   # Interpolation for gaps
+
+# Output Configuration
+output:
+  # File format
+  date_format: "%-m/%-d/%y"      # US format without leading zeros
+  float_precision: 2             # Decimal places for prices
+  include_futures: true          # Include futures price column
+  
+  # Column naming
+  futures_column: "Futures_Price"
+  timestamp_column: "timestamp"
+  
+  # File options
+  compression: null              # Or 'gzip' for compressed output
+  index: false                   # Don't write index column
+
+# Caching Configuration
+cache:
+  enabled: true                  # Enable caching
+  directory: ".cache"            # Cache directory
+  
+  # TTL settings (seconds)
+  options_chain_ttl: 300         # 5 minutes for options chains
+  volatility_ttl: 3600          # 1 hour for volatility estimates
+  futures_ttl: 300              # 5 minutes for futures data
+  
+  # Size limits
+  max_cache_size_mb: 500        # Maximum cache size
+  cleanup_interval: 3600        # Clean up every hour
+
+# Logging Configuration
+logging:
+  level: "INFO"                  # Default log level
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # File logging
+  file_enabled: true
+  file_path: "logs/databento_options.log"
+  file_rotation: "daily"         # Rotate logs daily
+  file_retention_days: 30        # Keep logs for 30 days
+  
+  # Console logging
+  console_enabled: true
+  console_level: "INFO"
+  
+  # Performance logging
+  log_performance: true          # Log timing information
+  log_api_calls: true           # Log all API calls
+
+# Performance Optimization
+performance:
+  # Request batching
+  batch_requests: true           # Batch API requests
+  batch_size: 10                # Items per batch
+  
+  # Connection pooling
+  connection_pool_size: 10       # HTTP connection pool
+  
+  # Rate limiting
+  requests_per_second: 10        # API rate limit
+  burst_size: 20                # Allow burst requests
+  
+  # Timeout settings
+  connect_timeout: 10            # Connection timeout
+  read_timeout: 30              # Read timeout
+
+# Error Handling
+error_handling:
+  # Retry configuration
+  retry_on_errors: [500, 502, 503, 504]  # HTTP codes to retry
+  max_consecutive_failures: 5    # Stop after N failures
+  
+  # Recovery options
+  continue_on_error: true        # Continue processing on errors
+  save_partial_results: true     # Save incomplete data
+  
+  # Alerting
+  alert_on_critical: false       # Send alerts on critical errors
+  alert_email: null              # Email for alerts
+
+# Holiday Calendar
+calendar:
+  market: "CME"                  # Exchange calendar
+  timezone: "America/Chicago"    # Market timezone
+  
+  # Additional holidays (if any)
+  custom_holidays: []
+
+# Advanced Options
+advanced:
+  # Greeks calculation
+  calculate_all_greeks: false    # Calculate vega, gamma, theta
+  
+  # Smile modeling
+  use_volatility_smile: false    # Model volatility smile
+  smile_interpolation: "cubic"   # Interpolation method
+  
+  # Data quality checks
+  check_arbitrage: true          # Check for arbitrage violations
+  check_put_call_parity: true    # Verify put-call parity
+  
+  # Execution timing
+  pre_market_start: "08:00"      # Pre-market data start
+  post_market_end: "17:00"       # Post-market data end
+
+# Environment-specific overrides
+environments:
+  development:
+    logging:
+      level: "DEBUG"
+    cache:
+      enabled: false
+    performance:
+      requests_per_second: 2
+      
+  staging:
+    logging:
+      level: "INFO"
+    performance:
+      requests_per_second: 5
+      
+  production:
+    logging:
+      level: "WARNING"
+    error_handling:
+      alert_on_critical: true

@@ -1,25 +1,40 @@
-# Core data processing
-pandas==2.0.3
-numpy==1.24.3
-scipy==1.11.1
+# Databento Options Puller Requirements
+# Python 3.8+ required
 
-# Configuration
-pyyaml==6.0.1
+# Core dependencies
+databento>=0.30.0        # Official Databento Python client
+pandas>=2.0.3           # Data manipulation and analysis  
+numpy>=1.24.3          # Numerical computations
+scipy>=1.11.1          # Scientific computing (Black-Scholes)
+
+# CLI and configuration
+click>=8.0.0           # Command-line interface
+pyyaml>=6.0.1         # YAML configuration parsing
+python-dotenv>=0.19.0  # Environment variable management
+
+# Date and time handling
+python-dateutil>=2.8.2 # Advanced date parsing
+pytz>=2021.3          # Timezone support
+holidays>=0.11.3      # Market holiday calendar
+
+# Logging and monitoring
+colorlog>=6.7.0       # Colored logging output
+tqdm>=4.62.0         # Progress bars
+
+# Data validation
+jsonschema>=4.0.0    # Config validation
+
+# Performance
+joblib>=1.1.0       # Parallel processing
+cachetools>=4.2.0   # Caching utilities
 
 # Testing
-pytest==7.4.0
-pytest-cov==4.1.0
-
-# Logging enhancements
-colorlog==6.7.0
-
-# Date handling
-python-dateutil==2.8.2
-
-# Future Databento integration (commented for now)
-# databento==0.30.0
+pytest>=7.4.0       # Testing framework
+pytest-cov>=4.1.0   # Coverage reporting
+pytest-mock>=3.6.0  # Mocking support
+coverage>=6.0       # Code coverage
 
 # Development tools
-black==23.7.0
-flake8==6.0.0
-mypy==1.4.1
+black>=23.7.0      # Code formatting
+flake8>=6.0.0     # Linting
+mypy>=1.4.1       # Type checking

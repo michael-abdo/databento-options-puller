@@ -119,6 +119,22 @@ def get_previous_trading_day(date: datetime) -> datetime:
     return prev_day
 
 
+def get_first_trading_day(first_day: datetime) -> datetime:
+    """
+    Get the first trading day from a given date.
+    
+    Args:
+        first_day: Starting date (typically first of month)
+        
+    Returns:
+        First trading day from that date
+    """
+    if is_trading_day(first_day):
+        return first_day
+    else:
+        return get_next_trading_day(first_day)
+
+
 def get_first_trading_day_of_month(year: int, month: int) -> datetime:
     """
     Get the first trading day of a given month.

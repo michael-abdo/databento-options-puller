@@ -1,124 +1,205 @@
-# Databento Options Data Extractor - Closed Feedback Loop Implementation
+# Databento NY Harbor ULSD Options Data Extractor
 
-## 🎯 Project Goal
-Create a Python script that exactly reproduces `example_output.csv` by pulling NY Harbor ULSD (OH) futures and 15-delta call options data from Databento.
+## 🎯 Project Overview
+Professional-grade Python application that automatically fetches and formats NY Harbor ULSD (OH) futures and 15-delta call options data from Databento, implementing a rolling monthly options strategy.
 
-## 🔄 Implementation Approach
-
-### Closed Feedback Loop System
-```
-example_output.csv (Ground Truth)
-        ↓
-    Analyze → Generate → Validate → Refine
-        ↑                              ↓
-        ←──────── Iterate ─────────────
-```
-
-The implementation treats `example_output.csv` as the absolute specification. Rather than guessing business logic, we reverse-engineer it from the data through iterative refinement.
+## ✨ Key Features
+- **Automated Delta Targeting**: Finds options with delta closest to 0.15
+- **Rolling Monthly Strategy**: Automatically rolls to M+2 expiration on first trading day
+- **Black-Scholes Calculations**: Accurate options pricing and Greeks
+- **Production Ready**: Comprehensive error handling, logging, and testing
+- **Flexible Output**: Matches your exact CSV format requirements
 
 ## 📁 Project Structure
 
 ```
 databento_options_project/
-├── example_output.csv          # Ground truth - must match exactly
-├── implementation_plan.md      # Closed feedback loop methodology
-├── script_architecture.md      # Modular Python architecture
-├── project_requirements.md     # Original specifications
-├── src/
-│   ├── example_analyzer.py    # Extracts facts from example
-│   ├── option_generator.py    # Attempts to recreate output
-│   ├── output_validator.py    # Compares and logs differences
-│   └── parameter_refiner.py   # Adjusts based on errors
-├── main.py                    # Orchestrates feedback loop
-├── logs/                      # Detailed logging for debugging
-│   ├── analyzer.log
-│   ├── generator.log
-│   ├── validator.log
-│   └── refiner.log
-└── output/                    # Iteration results
+├── databento_options_puller.py  # Main executable
+├── requirements.txt             # Python dependencies
+├── setup.py                     # Package installation
+├── run_tests.py                 # Test runner
+├── README.md                    # This file
+│
+├── src/                         # Core modules
+│   ├── databento_client.py      # Databento API interface
+│   ├── delta_calculator.py      # Black-Scholes calculations
+│   ├── futures_manager.py       # Futures contract handling
+│   ├── options_manager.py       # Options chain management
+│   ├── option_generator.py      # Output generation logic
+│   ├── example_analyzer.py      # Example data analysis
+│   ├── output_validator.py      # Output validation
+│   └── parameter_refiner.py     # Parameter optimization
+│
+├── tests/                       # Test suite
+│   ├── test_delta_calculator.py # Unit tests for delta calc
+│   ├── test_data_processing.py  # Data handling tests
+│   └── test_integration.py      # Integration tests
+│
+├── config/                      # Configuration files
+│   ├── config.yaml              # Default configuration
+│   └── production_config.yaml   # Production settings
+│
+├── utils/                       # Utility modules
+│   ├── date_utils.py            # Date/calendar functions
+│   ├── symbol_utils.py          # Symbol parsing
+│   └── logging_config.py        # Logging setup
+│
+├── docs/                        # Documentation
+│   ├── guides/                  # User guides
+│   │   ├── DOCUMENTATION.md     # Complete user guide
+│   │   ├── DEPLOYMENT_GUIDE.md  # Production deployment
+│   │   ├── LIVE_DATA_ACTIVATION.md # Switching to live data
+│   │   ├── OUTPUT_COMPARISON.md # Output format details
+│   │   └── PROJECT_SUMMARY.md   # Project completion summary
+│   ├── architecture/            # Technical docs
+│   │   ├── implementation_plan.md
+│   │   ├── project_requirements.md
+│   │   └── script_architecture.md
+│   └── stages/                  # Development stages
+│
+├── examples/                    # Example files
+│   ├── example_output.csv       # Target output format
+│   ├── live_heating_oil_data.csv# Sample market data
+│   ├── test_output.csv          # Test results
+│   └── live_data_demo.py        # Demo script
+│
+├── output/                      # Generated outputs
+│   └── [generated files]
+│
+├── logs/                        # Application logs
+└── archive/                     # Archived files
 ```
 
-## 🔍 Key Components
+## 🚀 Quick Start
 
-### 1. Example Analyzer
-- Extracts all observable facts from `example_output.csv`
-- Identifies option symbols, active periods, roll dates
-- Discovers patterns in the data
+**New to the project? Start here!** 👇
 
-### 2. Option Generator
-- Attempts to recreate the output based on hypothesis
-- Uses configurable parameters (delta target, volatility, etc.)
-- Logs all calculations for debugging
-
-### 3. Output Validator
-- Compares generated output with example
-- Provides detailed accuracy metrics
-- Logs specific discrepancies
-
-### 4. Parameter Refiner
-- Analyzes validation results
-- Suggests parameter adjustments
-- Tracks history to avoid loops
-
-## 📊 Success Criteria
-
-The implementation succeeds when:
-- ✅ All option symbols match exactly
-- ✅ Options appear on correct dates
-- ✅ Options disappear on correct dates
-- ✅ Price values match (within tolerance)
-- ✅ No missing or extra data
-
-## 🚀 Running the System
-
+### 1️⃣ Super Quick Demo (No Setup!)
 ```bash
-# Install dependencies
-pip install pandas numpy scipy
-
-# Run the feedback loop
-python main.py
-
-# Monitor progress
-tail -f logs/main.log
-
-# Check validation errors
-tail -f logs/validator.log
+# Just run this one command to see it work:
+python examples/quick_example.py
 ```
 
-## 📈 Iteration Process
+### 2️⃣ Five-Minute Setup
+```bash
+# Clone and enter project
+git clone <repository-url>
+cd databento_options_project
 
-1. **Analyze**: Extract facts from example output
-2. **Generate**: Attempt to recreate based on current parameters
-3. **Validate**: Compare with example, log discrepancies
-4. **Refine**: Adjust parameters based on errors
-5. **Repeat**: Continue until 100% match
+# Setup Python environment
+python3 -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
-## 🔧 Debugging
+# Install dependencies
+pip install -r requirements.txt
 
-Each iteration produces:
-- `output/iteration_N.csv` - Generated attempt
-- Detailed logs showing:
-  - What was expected vs generated
-  - Parameter values used
-  - Specific errors and mismatches
+# Run your first pull!
+python databento_options_puller.py \
+    --start-date "2021-12-01" \
+    --end-date "2021-12-31" \
+    --output "my_first_output.csv"
+```
 
-## 💡 Key Insights
+### 3️⃣ Essential Resources
+- **🎯 [Getting Started Guide](docs/guides/GETTING_STARTED.md)** - Complete beginner's guide
+- **📋 [Quick Reference](docs/guides/QUICK_REFERENCE.md)** - Command cheat sheet
+- **🔍 [How It Works](docs/guides/HOW_IT_WORKS.md)** - Visual explanation
+- **📊 [Examples](examples/)** - Sample files and demo scripts
 
-- The example output contains all information needed to reverse-engineer the logic
-- Every discrepancy is a clue about the true underlying rules
-- Detailed logging enables systematic debugging
-- Success is binary - either it matches exactly or it doesn't
+### Basic Usage Examples
+```bash
+# Last month's data
+python databento_options_puller.py \
+    --start-date "2023-10-01" \
+    --end-date "2023-10-31" \
+    --output "october_2023.csv"
 
-## 📝 Implementation Status
+# With futures prices included
+python databento_options_puller.py \
+    --start-date "2023-10-01" \
+    --end-date "2023-10-31" \
+    --include-futures \
+    --output "oct_with_futures.csv"
+```
 
-- [x] Closed feedback loop design
-- [x] Modular architecture
-- [x] Validation framework
-- [ ] Example analyzer implementation
-- [ ] Generator with parameter tuning
-- [ ] Iterative refinement logic
-- [ ] 100% match with example output
+## 🔧 Configuration
 
----
+The system can be configured via:
+1. Command-line arguments
+2. Configuration files (YAML)
+3. Environment variables
 
-This approach guarantees we'll match the expected output exactly by treating it as a test case and systematically eliminating discrepancies through logged feedback.
+Example configuration:
+```yaml
+strategy:
+  target_delta: 0.15        # Target 15-delta options
+  months_ahead: 2           # Roll to M+2 expiration
+  
+risk:
+  risk_free_rate: 0.05      # 5% annual rate
+  
+output:
+  date_format: "%-m/%-d/%y" # Format: 12/1/21
+```
+
+## 📊 Output Format
+
+The system generates a CSV file with:
+- **timestamp**: Date column (MM/DD/YY format)
+- **Futures_Price**: Optional futures price column
+- **Option columns**: One column per selected option (e.g., `OHF2 C27800`)
+
+Example output:
+```csv
+timestamp,OHF2 C27800,OHG2 C24500,OHH2 C27000
+12/2/21,0.12,,,
+12/3/21,0.11,,,
+12/5/21,0.11,2.6,,
+```
+
+## 🧪 Testing
+
+Run the comprehensive test suite:
+```bash
+# All tests
+python run_tests.py
+
+# With coverage
+python run_tests.py --coverage
+
+# Specific module
+python run_tests.py --module test_delta_calculator
+```
+
+## 📚 Documentation
+
+- **[Complete User Guide](docs/guides/DOCUMENTATION.md)** - Detailed usage instructions
+- **[Deployment Guide](docs/guides/DEPLOYMENT_GUIDE.md)** - Production deployment
+- **[Live Data Setup](docs/guides/LIVE_DATA_ACTIVATION.md)** - Switch from mock to live data
+- **[Architecture Docs](docs/architecture/)** - Technical design documents
+
+## ⚠️ Important Notes
+
+1. **Mock vs Live Data**: The system currently uses mock data for testing. See [Live Data Activation](docs/guides/LIVE_DATA_ACTIVATION.md) to switch to real Databento data.
+
+2. **API Costs**: Databento charges per API request. Test with small date ranges first.
+
+3. **Data Quality**: The system handles sparse options data gracefully, but some contracts may have limited liquidity.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests to ensure nothing breaks
+5. Submit a pull request
+
+## 📝 License
+
+[Your License Here]
+
+## 🙏 Acknowledgments
+
+- Databento for market data API
+- Black-Scholes model for options pricing
+- Example data format provided by the client

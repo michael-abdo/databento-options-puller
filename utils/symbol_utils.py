@@ -193,6 +193,48 @@ def is_put_option(symbol: str) -> bool:
     return parsed['option_type'] == 'P'
 
 
+def build_futures_symbol(root: str, month: int, year: int) -> str:
+    """
+    Build futures symbol from components.
+    
+    Args:
+        root: Underlying symbol (e.g., "OH")
+        month: Month number (1-12) 
+        year: Full year (e.g., 2022)
+        
+    Returns:
+        Futures symbol (e.g., "OHF2")
+    """
+    if month not in MONTH_TO_CODE:
+        raise ValueError(f"Invalid month: {month}")
+    
+    month_code = MONTH_TO_CODE[month]
+    year_code = str(year)[-1]
+    
+    return f"{root}{month_code}{year_code}"
+
+
+def parse_futures_symbol(symbol: str) -> Tuple[str, str, str]:
+    """
+    Parse futures symbol into components.
+    
+    Args:
+        symbol: Futures symbol (e.g., "OHF2")
+        
+    Returns:
+        Tuple of (root, month_code, year_code)
+    """
+    # Pattern: ROOT + MONTH_CODE + YEAR_CODE
+    pattern = r'^([A-Z]+)([FGHJKMNQUVXZ])(\d)$'
+    
+    match = re.match(pattern, symbol.strip())
+    if not match:
+        return None
+    
+    root, month_code, year_code = match.groups()
+    return root, month_code, year_code
+
+
 def get_futures_symbol(root: str, month: int, year: int) -> str:
     """
     Build futures symbol from components.
