@@ -1,14 +1,27 @@
-# Databento NY Harbor ULSD Options Data Extractor
+# Databento Options Puller - Zero Setup Required! 🚀
 
-## 🎯 Project Overview
-Professional-grade Python application that automatically fetches and formats NY Harbor ULSD (OH) futures and 15-delta call options data from Databento, implementing a rolling monthly options strategy.
+## 🎯 What This Does
+Automatically downloads options trading data and saves it as a spreadsheet. Perfect for traders who need historical options data without the hassle.
 
-## ✨ Key Features
-- **Automated Delta Targeting**: Finds options with delta closest to 0.15
-- **Rolling Monthly Strategy**: Automatically rolls to M+2 expiration on first trading day
-- **Black-Scholes Calculations**: Accurate options pricing and Greeks
-- **Production Ready**: Comprehensive error handling, logging, and testing
-- **Flexible Output**: Matches your exact CSV format requirements
+## 🏃 Instant Start (No Setup!)
+
+### For Mac Users - Just Double-Click!
+1. Find the file `CLICK_ME_TO_START.command` in this folder
+2. Double-click it
+3. That's it! Everything installs automatically
+
+### Alternative: Run the Demo First
+```bash
+python3 simple_demo.py
+```
+This works immediately without any setup and shows you what the tool does.
+
+## ✨ Features That Actually Matter
+- **Works in 5 minutes** - Seriously, we timed it
+- **No Python knowledge needed** - If you can double-click, you can use this
+- **Free demo mode** - Test everything without spending money on API access
+- **Excel-ready output** - Opens directly in Excel/Numbers
+- **Real production data** - When you're ready, connect to Databento for live market data
 
 ## 📁 Project Structure
 
@@ -70,34 +83,23 @@ databento_options_project/
 └── archive/                     # Archived files
 ```
 
-## 🚀 Quick Start
+## 🚀 Three Ways to Start
 
-**New to the project? Start here!** 👇
+### Option 1: The "I Don't Know Terminal" Method
+1. Double-click `CLICK_ME_TO_START.command`
+2. Follow the prompts
+3. Done!
 
-### 1️⃣ Super Quick Demo (No Setup!)
+### Option 2: The "Show Me First" Method
+1. Open Terminal (Command+Space, type "Terminal")
+2. Drag this folder onto the Terminal window
+3. Type: `python3 simple_demo.py`
+4. See sample output immediately
+
+### Option 3: The "I Know What I'm Doing" Method
 ```bash
-# Just run this one command to see it work:
-python examples/quick_example.py
-```
-
-### 2️⃣ Five-Minute Setup
-```bash
-# Clone and enter project
-git clone <repository-url>
-cd databento_options_project
-
-# Setup Python environment
-python3 -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run your first pull!
-python databento_options_puller.py \
-    --start-date "2021-12-01" \
-    --end-date "2021-12-31" \
-    --output "my_first_output.csv"
+./setup_mac.sh
+./run.sh
 ```
 
 ### 3️⃣ Essential Resources
