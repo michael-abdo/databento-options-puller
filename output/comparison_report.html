@@ -1,0 +1,39 @@
+
+        <html>
+        <head>
+            <title>Output Comparison Report</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .match { background-color: #90EE90; }
+                .mismatch { background-color: #FFB6C1; }
+                .missing { background-color: #FFE4B5; }
+                table { border-collapse: collapse; margin: 20px 0; }
+                td, th { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f2f2f2; }
+                .summary { background-color: #f0f0f0; padding: 15px; margin: 20px 0; }
+                .error { color: red; }
+                .warning { color: orange; }
+                .success { color: green; }
+            </style>
+        </head>
+        <body>
+            <h1>Output Comparison Report</h1>
+        
+            <div class="summary">
+                <h2>Summary</h2>
+                <p>Overall Score: <span class="error">46.20%</span></p>
+                <ul>
+            <li>column_accuracy: <span class="success">100.00%</span></li><li>date_accuracy: <span class="error">0.00%</span></li><li>symbol_accuracy: <span class="success">100.00%</span></li><li>period_accuracy: <span class="error">22.51%</span></li><li>value_accuracy: <span class="error">1.90%</span></li><li>structure_accuracy: <span class="success">100.00%</span></li><li>overall_accuracy: <span class="error">54.07%</span></li>
+                </ul>
+            </div>
+            
+                <div class="errors">
+                    <h2>Errors Found</h2>
+                    <ul>
+                <li class="warning">OHF2 C27800 ends at wrong date</li><li class="warning">OHG2 C24500 ends at wrong date</li><li class="warning">OHH2 C27000 starts at wrong date</li><li class="warning">OHH2 C27000 ends at wrong date</li><li class="warning">OHJ2 C30200 starts at wrong date</li><li class="warning">OHJ2 C30200 ends at wrong date</li><li class="warning">OHK2 C35000 starts at wrong date</li><li class="warning">OHK2 C35000 ends at wrong date</li>
+                    </ul>
+                </div>
+                
+        </body>
+        </html>
+        
