@@ -1,0 +1,50 @@
+# Default parameters for the feedback loop system
+# These will be adjusted automatically based on validation results
+
+# Option selection parameters
+option_selection:
+  delta_target: 0.15          # Target delta for option selection
+  delta_tolerance: 0.02       # Accept options within target ± tolerance
+  months_ahead: 2             # Select options M+2 months out
+
+# Market parameters  
+market:
+  volatility: 0.30            # Initial volatility estimate (30%)
+  risk_free_rate: 0.05        # Risk-free rate (5%)
+  
+# Data generation parameters (for stub testing)
+stub_data:
+  use_stub: true              # Use stub data instead of real API
+  price_volatility: 0.02      # Daily price volatility for random walk
+  base_futures_price: 2.50    # Starting futures price
+  
+# Feedback loop parameters
+feedback_loop:
+  max_iterations: 50          # Maximum iterations before giving up
+  convergence_threshold: 0.99 # Success when all metrics >= this value
+  
+# Validation parameters
+validation:
+  price_tolerance: 0.01       # Acceptable price difference
+  date_format: "%m/%d/%y"     # Expected date format in CSV
+  
+# Logging parameters
+logging:
+  level: "DEBUG"              # Logging level
+  console_level: "INFO"       # Console output level
+  
+# Output parameters
+output:
+  save_iterations: true       # Save each iteration's output
+  create_html_report: true    # Generate HTML comparison report
+  
+# Refiner parameters
+refiner:
+  learning_rate: 0.01         # How much to adjust parameters
+  patience: 5                 # Iterations before trying larger changes
+  
+# API parameters (for future use)
+databento:
+  api_key: ""                 # Will be loaded from environment or secrets
+  dataset: "OPRA"             # Options dataset
+  schema: "ohlcv-1d"          # Daily OHLCV data
