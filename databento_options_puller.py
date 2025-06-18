@@ -252,10 +252,10 @@ def run_demo():
     print("Creating sample options data...")
     
     # Create output directory
-    os.makedirs("demo_output", exist_ok=True)
+    os.makedirs("output/demo", exist_ok=True)
     
     # Generate sample data
-    output_file = "demo_output/sample_options_data.csv"
+    output_file = "output/demo/sample_options_data.csv"
     with open(output_file, 'w', newline='') as f:
         writer = csv.writer(f)
         

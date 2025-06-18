@@ -52,11 +52,6 @@ databento-options-puller/
 │   ├── test_integration.py      # Integration tests
 │   └── test_api_key.py          # API key validation
 │
-├── scripts/                     # Utility scripts
-│   ├── run_tests.py             # Test runner
-│   ├── setup_mac.sh             # Mac setup automation
-│   └── check_setup.py           # Setup verification
-│
 ├── config/                      # Configuration files
 │   ├── default_params.yaml      # Default parameters
 │   └── production_config.yaml   # Production settings
@@ -180,16 +175,16 @@ timestamp,OHF2 C27800,OHG2 C24500,OHH2 C27000
 
 ## 🧪 Testing
 
-Run the comprehensive test suite:
+Run the test suite:
 ```bash
 # All tests
-python run_tests.py
+python3 -m unittest discover tests
 
-# With coverage
-python run_tests.py --coverage
+# Specific test file
+python3 -m unittest tests.test_delta_calculator
 
-# Specific module
-python run_tests.py --module test_delta_calculator
+# Verbose output
+python3 -m unittest discover tests -v
 ```
 
 ## 📚 Documentation
