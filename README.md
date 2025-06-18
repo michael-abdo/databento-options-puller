@@ -26,12 +26,20 @@ This works immediately without any setup and shows you what the tool does.
 ## 📁 Project Structure
 
 ```
-databento_options_project/
-├── databento_options_puller.py  # Main executable
-├── requirements.txt             # Python dependencies
+databento-options-puller/
+├── README.md                    # Main documentation
+├── requirements.txt             # Python dependencies  
 ├── setup.py                     # Package installation
-├── run_tests.py                 # Test runner
-├── README.md                    # This file
+├── .env                         # API key configuration (created on setup)
+│
+├── 🚀 Quick Start Files
+│   ├── START_HERE.command       # Mac users: double-click to start
+│   ├── easy_setup.py            # Interactive setup wizard
+│   ├── simple_demo.py           # Run demo without setup
+│   └── run_puller.py            # Interactive data puller
+│
+├── 📊 Main Application
+│   └── databento_options_puller.py  # Core application
 │
 ├── src/                         # Core modules
 │   ├── databento_client.py      # Databento API interface
@@ -46,10 +54,16 @@ databento_options_project/
 ├── tests/                       # Test suite
 │   ├── test_delta_calculator.py # Unit tests for delta calc
 │   ├── test_data_processing.py  # Data handling tests
-│   └── test_integration.py      # Integration tests
+│   ├── test_integration.py      # Integration tests
+│   └── test_api_key.py          # API key validation
+│
+├── scripts/                     # Utility scripts
+│   ├── run_tests.py             # Test runner
+│   ├── setup_mac.sh             # Mac setup automation
+│   └── check_setup.py           # Setup verification
 │
 ├── config/                      # Configuration files
-│   ├── config.yaml              # Default configuration
+│   ├── default_params.yaml      # Default parameters
 │   └── production_config.yaml   # Production settings
 │
 ├── utils/                       # Utility modules
@@ -59,28 +73,30 @@ databento_options_project/
 │
 ├── docs/                        # Documentation
 │   ├── guides/                  # User guides
+│   │   ├── README_SIMPLE.md     # Plain English guide
+│   │   ├── FIRST_TIME_USERS_START_HERE.txt # Beginner instructions
 │   │   ├── DOCUMENTATION.md     # Complete user guide
 │   │   ├── DEPLOYMENT_GUIDE.md  # Production deployment
 │   │   ├── LIVE_DATA_ACTIVATION.md # Switching to live data
 │   │   ├── OUTPUT_COMPARISON.md # Output format details
 │   │   └── PROJECT_SUMMARY.md   # Project completion summary
-│   ├── architecture/            # Technical docs
-│   │   ├── implementation_plan.md
-│   │   ├── project_requirements.md
-│   │   └── script_architecture.md
-│   └── stages/                  # Development stages
+│   └── architecture/            # Technical docs
+│       ├── implementation_plan.md
+│       ├── project_requirements.md
+│       └── script_architecture.md
 │
 ├── examples/                    # Example files
 │   ├── example_output.csv       # Target output format
 │   ├── live_heating_oil_data.csv# Sample market data
 │   ├── test_output.csv          # Test results
-│   └── live_data_demo.py        # Demo script
+│   ├── live_data_demo.py        # Demo script
+│   ├── quick_example.py         # Quick start example
+│   └── working_example.py       # Working implementation
 │
-├── output/                      # Generated outputs
-│   └── [generated files]
-│
-├── logs/                        # Application logs
-└── archive/                     # Archived files
+├── output/                      # Generated outputs (git-ignored)
+├── logs/                        # Application logs (git-ignored)
+├── demo_output/                 # Demo outputs
+└── archive/                     # Old/deprecated files
 ```
 
 ## 🚀 Three Ways to Start

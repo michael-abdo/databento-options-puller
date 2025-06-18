@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 
 # Add project root to path
-project_root = Path(__file__).parent
+project_root = Path(__file__).parent.parent  # Go up one level from scripts
 sys.path.insert(0, str(project_root))
 
 def run_all_tests():
@@ -21,7 +21,7 @@ def run_all_tests():
     
     # Discover and run tests
     loader = unittest.TestLoader()
-    start_dir = project_root / 'tests'
+    start_dir = str(project_root / 'tests')  # Convert to string
     suite = loader.discover(start_dir, pattern='test_*.py')
     
     # Run tests with verbosity
