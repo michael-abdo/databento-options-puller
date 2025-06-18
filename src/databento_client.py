@@ -383,6 +383,9 @@ class DatabentoBridge:
             logger.debug(f"Mapped root symbol '{root}' to contract '{symbol}' for date {start_date}")
         
         if not self.mock_mode and self.client:
+            logger.info(f"🔍 STEP 1: Attempting Databento API call for futures symbol '{symbol}' ({start_date} to {end_date})")
+            logger.info(f"📡 Using API Key: ...{self.api_key[-8:] if self.api_key else 'None'}")
+            
             try:
                 # Use official Databento client
                 # Ensure end date is after start date for API
@@ -398,6 +401,7 @@ class DatabentoBridge:
                 if symbol.startswith('HO'):
                     # Use continuous front month contract
                     continuous_symbol = "HO.c.0"
+                    logger.info(f"🎯 FUTURES REQUEST: Using continuous symbol '{continuous_symbol}' for HO futures")
                     data = self.client.timeseries.get_range(
                         dataset='GLBX.MDP3',
                         schema='ohlcv-1d',
@@ -407,6 +411,7 @@ class DatabentoBridge:
                         end=end_date_api
                     )
                 elif self._is_explicit_contract(symbol):
+                    logger.info(f"🎯 FUTURES REQUEST: Using explicit contract symbol '{symbol}'")
                     data = self.client.timeseries.get_range(
                         dataset='GLBX.MDP3',
                         schema='ohlcv-1d',
@@ -418,6 +423,7 @@ class DatabentoBridge:
                 else:
                     # Use continuous front month contract
                     continuous_symbol = f"{symbol}.c.0"
+                    logger.info(f"🎯 FUTURES REQUEST: Using continuous symbol '{continuous_symbol}' for root '{symbol}'")
                     data = self.client.timeseries.get_range(
                         dataset='GLBX.MDP3',
                         schema='ohlcv-1d',
@@ -427,32 +433,59 @@ class DatabentoBridge:
                         end=end_date_api
                     )
                 
+                logger.info(f"✅ STEP 2: Databento API call successful - converting to DataFrame")
+                
                 # Convert to DataFrame
                 df = data.to_df()
+                
+                logger.info(f"📊 STEP 3: Raw DataFrame shape: {df.shape}, columns: {list(df.columns)}")
                 
                 # The index is the timestamp, convert it to a column
                 df = df.reset_index()
                 if 'ts_event' in df.columns:
                     df['date'] = pd.to_datetime(df['ts_event'])
+                    logger.info(f"🕒 Using 'ts_event' column for dates")
                 elif 'index' in df.columns:
                     df['date'] = pd.to_datetime(df['index'])
                     df = df.drop('index', axis=1)
+                    logger.info(f"🕒 Using 'index' column for dates")
                 elif 'timestamp' in df.columns:
                     df['date'] = pd.to_datetime(df['timestamp'])
+                    logger.info(f"🕒 Using 'timestamp' column for dates")
+                else:
+                    logger.warning(f"⚠️ No timestamp column found in DataFrame")
                 
                 # Select required columns
                 expected_cols = ['date', 'open', 'high', 'low', 'close', 'volume']
                 available_cols = [col for col in expected_cols if col in df.columns]
                 df = df[available_cols].sort_values('date').reset_index(drop=True)
                 
-                logger.info(f"Retrieved {len(df)} days of futures data from Databento")
+                logger.info(f"✅ STEP 4: Retrieved {len(df)} days of futures data from Databento API")
+                if len(df) > 0:
+                    logger.info(f"📈 Sample data - First row: {df.iloc[0].to_dict()}")
+                    logger.info(f"📈 Sample data - Last row: {df.iloc[-1].to_dict()}")
+                
                 return df
                 
             except Exception as e:
-                logger.error(f"Databento API error: {e}")
-                # Fall back to mock mode for this request
+                logger.error(f"❌ STEP 2: Databento API call FAILED with error: {e}")
+                logger.error(f"🔍 Error type: {type(e).__name__}")
+                
+                # Check for specific error types
+                if "401" in str(e) or "authentication" in str(e).lower():
+                    logger.error(f"🔐 DIAGNOSIS: Authentication failed - API key may be invalid or lack permissions")
+                elif "404" in str(e) or "not found" in str(e).lower():
+                    logger.error(f"📭 DIAGNOSIS: Data not found - symbol may not exist in dataset")
+                elif "403" in str(e) or "forbidden" in str(e).lower():
+                    logger.error(f"🚫 DIAGNOSIS: Forbidden - API key lacks permissions for this data")
+                else:
+                    logger.error(f"❓ DIAGNOSIS: Unknown error type")
+                
+                logger.info(f"🔄 STEP 3: Falling back to HTTP request method")
                 
         # Fallback to HTTP request or mock
+        logger.info(f"🌐 STEP 4: Attempting HTTP fallback request")
+        
         params = {
             'dataset': 'GLBX.MDP3',
             'schema': 'ohlcv-1d',
@@ -461,24 +494,54 @@ class DatabentoBridge:
             'end': end_date
         }
         
-        response = self._make_request('timeseries/get_range', params)
+        logger.info(f"🔗 HTTP REQUEST: {self.base_url}/timeseries/get_range")
+        logger.info(f"📋 HTTP PARAMS: {params}")
         
-        # Convert to DataFrame
-        data = response.get('data', [])
-        if not data:
-            logger.warning(f"No futures data returned for {root}")
+        try:
+            response = self._make_request('timeseries/get_range', params)
+            logger.info(f"✅ STEP 5: HTTP request successful")
+            
+            # Convert to DataFrame
+            data = response.get('data', [])
+            if not data:
+                logger.warning(f"📭 STEP 6: HTTP response contains no data for symbol '{root}'")
+                logger.info(f"🔍 Full response keys: {list(response.keys())}")
+                return pd.DataFrame()
+            
+            logger.info(f"📊 STEP 6: HTTP response contains {len(data)} data records")
+            df = pd.DataFrame(data)
+            
+            # Convert timestamp and clean up
+            if 'ts_event' in df.columns:
+                df['date'] = pd.to_datetime(df['ts_event'] / 1e9, unit='s')
+                logger.info(f"🕒 HTTP: Using 'ts_event' column for dates")
+            else:
+                logger.warning(f"⚠️ HTTP: No 'ts_event' column found")
+                
+            expected_cols = ['date', 'open', 'high', 'low', 'close', 'volume']
+            available_cols = [col for col in expected_cols if col in df.columns]
+            df = df[available_cols]
+            df = df.sort_values('date').reset_index(drop=True)
+            
+            logger.info(f"✅ STEP 7: Retrieved {len(df)} days of futures data via HTTP")
+            if len(df) > 0:
+                logger.info(f"📈 HTTP Sample - First row: {df.iloc[0].to_dict()}")
+            
+            return df
+            
+        except Exception as e:
+            logger.error(f"❌ STEP 5: HTTP fallback FAILED with error: {e}")
+            logger.error(f"🔍 HTTP Error type: {type(e).__name__}")
+            
+            if "401" in str(e):
+                logger.error(f"🔐 HTTP DIAGNOSIS: Authentication failed - no auth headers in HTTP request")
+            elif "404" in str(e):
+                logger.error(f"📭 HTTP DIAGNOSIS: Endpoint not found or data unavailable")
+            elif "403" in str(e):
+                logger.error(f"🚫 HTTP DIAGNOSIS: Forbidden - insufficient permissions")
+            
+            logger.info(f"🎭 STEP 6: All methods failed - returning empty DataFrame")
             return pd.DataFrame()
-        
-        df = pd.DataFrame(data)
-        
-        # Convert timestamp and clean up
-        if 'ts_event' in df.columns:
-            df['date'] = pd.to_datetime(df['ts_event'] / 1e9, unit='s')
-        df = df[['date', 'open', 'high', 'low', 'close', 'volume']]
-        df = df.sort_values('date').reset_index(drop=True)
-        
-        logger.info(f"Retrieved {len(df)} days of futures data")
-        return df
     
     def fetch_options_chain(self, underlying: str, expiry_month: str, 
                            trade_date: Union[str, datetime]) -> List[Dict]:
@@ -493,15 +556,21 @@ class DatabentoBridge:
         Returns:
             List of option contract details
         """
-        logger.info(f"Fetching options chain for {underlying} {expiry_month} on {trade_date}")
+        trade_date_str = trade_date if isinstance(trade_date, str) else trade_date.strftime('%Y-%m-%d')
+        logger.info(f"🔍 STEP 1: Attempting options chain fetch for '{underlying}' {expiry_month} on {trade_date_str}")
+        logger.info(f"📡 Using API Key: ...{self.api_key[-8:] if self.api_key else 'None'}")
         
         # Use real Databento API if available
         if not self.mock_mode and self.client:
+            logger.info(f"🎯 STEP 2: Using official Databento API client for options chain")
+            
             try:
                 # For HO futures, options use OH prefix
                 option_symbol = 'OH.OPT' if underlying == 'HO' else f'{underlying}.OPT'
+                logger.info(f"🔗 SYMBOL MAPPING: '{underlying}' -> '{option_symbol}' for options parent")
                 
                 # Get option definitions
+                logger.info(f"📋 OPTIONS REQUEST: Fetching definitions for '{option_symbol}' on {trade_date_str}")
                 definitions = self.client.timeseries.get_range(
                     dataset='GLBX.MDP3',
                     schema='definition',
@@ -510,25 +579,39 @@ class DatabentoBridge:
                     start=trade_date,
                     end=pd.to_datetime(trade_date) + timedelta(days=1)
                 )
+                
+                logger.info(f"✅ STEP 3: Databento definitions API call successful - converting to DataFrame")
                 df = definitions.to_df()
                 
-                if len(df) == 0:
-                    logger.warning(f"No options found for {option_symbol}")
+                logger.info(f"📊 STEP 4: Raw definitions DataFrame shape: {df.shape}")
+                if len(df) > 0:
+                    logger.info(f"🔍 Available columns: {list(df.columns)}")
+                    logger.info(f"📈 Sample definition - First row: {df.iloc[0].to_dict()}")
+                else:
+                    logger.warning(f"📭 STEP 4: No definitions found for '{option_symbol}' on {trade_date_str}")
                     return []
                 
                 # Parse expiry month
                 target_year = int(expiry_month.split('-')[0])
                 target_month = int(expiry_month.split('-')[1])
+                logger.info(f"🎯 TARGET EXPIRY: {target_year}-{target_month:02d} (year={target_year}, month={target_month})")
                 
                 # Convert expiration to datetime
                 df['expiration'] = pd.to_datetime(df['expiration'])
+                logger.info(f"📅 STEP 5: Converted expiration column to datetime")
                 
                 # Filter for target month call options
+                logger.info(f"🔍 STEP 6: Filtering for call options in target month")
                 options = df[
                     (df['symbol'].str.contains(' C', na=False)) &  # Calls only
                     (df['expiration'].dt.year == target_year) &
                     (df['expiration'].dt.month == target_month)
                 ]
+                
+                logger.info(f"📊 FILTERING RESULTS:")
+                logger.info(f"   - Total definitions: {len(df)}")
+                logger.info(f"   - Call options found: {len(options)}")
+                logger.info(f"   - Target year/month: {target_year}-{target_month:02d}")
                 
                 result = []
                 for _, row in options.iterrows():
@@ -544,11 +627,28 @@ class DatabentoBridge:
                         'expiry': row['expiration'].strftime('%Y-%m-%d')
                     })
                 
-                logger.info(f"Found {len(result)} call options for {expiry_month}")
+                logger.info(f"✅ STEP 7: Successfully parsed {len(result)} call options for {expiry_month}")
+                if len(result) > 0:
+                    logger.info(f"📈 Sample options - First: {result[0]}")
+                    logger.info(f"📈 Sample options - Last: {result[-1]}")
+                
                 return result
                 
             except Exception as e:
-                logger.error(f"Error fetching options chain: {e}")
+                logger.error(f"❌ STEP 3: Databento options API call FAILED with error: {e}")
+                logger.error(f"🔍 Error type: {type(e).__name__}")
+                
+                # Check for specific error types
+                if "401" in str(e) or "authentication" in str(e).lower():
+                    logger.error(f"🔐 DIAGNOSIS: Authentication failed - API key may be invalid or lack permissions")
+                elif "404" in str(e) or "not found" in str(e).lower():
+                    logger.error(f"📭 DIAGNOSIS: Options data not found - symbol '{option_symbol}' may not exist in dataset")
+                elif "403" in str(e) or "forbidden" in str(e).lower():
+                    logger.error(f"🚫 DIAGNOSIS: Forbidden - API key lacks permissions for options data")
+                else:
+                    logger.error(f"❓ DIAGNOSIS: Unknown error type")
+                
+                logger.info(f"🔄 STEP 4: Falling back to alternative methods")
                 # Fall back to mock mode
         
         if self.mock_mode:
@@ -641,16 +741,20 @@ class DatabentoBridge:
         Returns:
             DataFrame with option data
         """
-        logger.info(f"Fetching option history for {symbol}: {start_date} to {end_date} (schema: {schema})")
-        
         # Convert dates to strings if needed
         if isinstance(start_date, datetime):
             start_date = start_date.strftime('%Y-%m-%d')
         if isinstance(end_date, datetime):
             end_date = end_date.strftime('%Y-%m-%d')
+            
+        logger.info(f"🔍 STEP 1: Attempting option history fetch for '{symbol}' ({start_date} to {end_date})")
+        logger.info(f"📋 Schema: {schema}")
+        logger.info(f"📡 Using API Key: ...{self.api_key[-8:] if self.api_key else 'None'}")
         
         # Use real databento client if available
         if not self.mock_mode and self.client:
+            logger.info(f"🎯 STEP 2: Using official Databento API client for option history")
+            
             try:
                 # Ensure end date is after start date for API
                 from datetime import datetime as dt, timedelta
@@ -659,9 +763,13 @@ class DatabentoBridge:
                 if end_dt <= start_dt:
                     end_dt = start_dt + timedelta(days=1)
                     end_date_api = end_dt.strftime('%Y-%m-%d')
+                    logger.info(f"📅 Adjusted end date from {end_date} to {end_date_api} (must be after start)")
                 else:
                     end_date_api = end_date
                     
+                logger.info(f"📋 OPTION HISTORY REQUEST: symbol='{symbol}', dataset='GLBX.MDP3', schema='{schema}'")
+                logger.info(f"📅 Date range: {start_date} to {end_date_api}")
+                
                 data = self.client.timeseries.get_range(
                     dataset='GLBX.MDP3',
                     schema=schema,
@@ -670,36 +778,67 @@ class DatabentoBridge:
                     end=end_date_api
                 )
                 
+                logger.info(f"✅ STEP 3: Databento option history API call successful - converting to DataFrame")
+                
                 # Convert to DataFrame
                 df = data.to_df()
+                
+                logger.info(f"📊 STEP 4: Raw option DataFrame shape: {df.shape}, columns: {list(df.columns)}")
                 
                 # The index is the timestamp, convert it to a column
                 df = df.reset_index()
                 if 'ts_event' in df.columns:
                     df['date'] = pd.to_datetime(df['ts_event'])
+                    logger.info(f"🕒 Using 'ts_event' column for dates")
                 elif 'index' in df.columns:
                     df['date'] = pd.to_datetime(df['index'])
                     df = df.drop('index', axis=1)
+                    logger.info(f"🕒 Using 'index' column for dates")
+                else:
+                    logger.warning(f"⚠️ No timestamp column found in option DataFrame")
                 
                 # Handle different schemas
+                logger.info(f"📋 STEP 5: Processing schema '{schema}' columns")
                 if schema == 'ohlcv-1d':
                     expected_cols = ['date', 'open', 'high', 'low', 'close', 'volume']
                     available_cols = [col for col in expected_cols if col in df.columns]
                     df = df[available_cols]
+                    logger.info(f"📊 OHLCV columns selected: {available_cols}")
                 elif schema in ['trades', 'mbp-1', 'mbo']:
                     # Keep relevant columns for tick data
                     available_cols = ['date'] + [col for col in ['price', 'size', 'bid_px', 'ask_px', 'bid_sz', 'ask_sz'] if col in df.columns]
                     df = df[available_cols]
+                    logger.info(f"📊 Tick data columns selected: {available_cols}")
                 
                 df = df.sort_values('date').reset_index(drop=True)
-                logger.info(f"Retrieved {len(df)} days of option data from Databento")
+                
+                logger.info(f"✅ STEP 6: Retrieved {len(df)} days of option data from Databento API")
+                if len(df) > 0:
+                    logger.info(f"📈 Sample option data - First row: {df.iloc[0].to_dict()}")
+                    logger.info(f"📈 Sample option data - Last row: {df.iloc[-1].to_dict()}")
+                
                 return df
                 
             except Exception as e:
-                logger.error(f"Databento API error: {e}")
+                logger.error(f"❌ STEP 3: Databento option history API call FAILED with error: {e}")
+                logger.error(f"🔍 Error type: {type(e).__name__}")
+                
+                # Check for specific error types
+                if "401" in str(e) or "authentication" in str(e).lower():
+                    logger.error(f"🔐 DIAGNOSIS: Authentication failed - API key may be invalid or lack permissions")
+                elif "404" in str(e) or "not found" in str(e).lower():
+                    logger.error(f"📭 DIAGNOSIS: Option data not found - symbol '{symbol}' may not exist in dataset")
+                elif "403" in str(e) or "forbidden" in str(e).lower():
+                    logger.error(f"🚫 DIAGNOSIS: Forbidden - API key lacks permissions for option data")
+                else:
+                    logger.error(f"❓ DIAGNOSIS: Unknown error type")
+                
+                logger.info(f"🔄 STEP 4: Falling back to HTTP request method")
                 # Fall back to HTTP request
         
         # Fallback to HTTP request
+        logger.info(f"🌐 STEP 5: Attempting HTTP fallback for option history")
+        
         params = {
             'dataset': 'GLBX.MDP3',  # CME Globex dataset for futures/options
             'schema': schema,
@@ -708,35 +847,69 @@ class DatabentoBridge:
             'end': end_date
         }
         
-        response = self._make_request('timeseries/get_range', params)
+        logger.info(f"🔗 HTTP REQUEST: {self.base_url}/timeseries/get_range")
+        logger.info(f"📋 HTTP PARAMS: {params}")
         
-        # Convert to DataFrame
-        data = response.get('data', [])
-        if not data:
-            logger.warning(f"No option data returned for {symbol}")
+        try:
+            response = self._make_request('timeseries/get_range', params)
+            logger.info(f"✅ STEP 6: HTTP option history request successful")
+            
+            # Convert to DataFrame
+            data = response.get('data', [])
+            if not data:
+                logger.warning(f"📭 STEP 7: HTTP response contains no option data for '{symbol}'")
+                logger.info(f"🔍 Full response keys: {list(response.keys())}")
+                return pd.DataFrame()
+            
+            logger.info(f"📊 STEP 7: HTTP response contains {len(data)} option data records")
+            df = pd.DataFrame(data)
+            
+            # Convert timestamp and clean up based on schema
+            if 'ts_event' in df.columns:
+                df['date'] = pd.to_datetime(df['ts_event'] / 1e9, unit='s')
+                logger.info(f"🕒 HTTP: Using 'ts_event' column for dates")
+            else:
+                logger.warning(f"⚠️ HTTP: No 'ts_event' column found in option data")
+            
+            # Format columns based on schema type
+            logger.info(f"📋 STEP 8: Processing HTTP option data for schema '{schema}'")
+            if schema == 'ohlcv-1d':
+                expected_cols = ['date', 'open', 'high', 'low', 'close', 'volume']
+                available_cols = [col for col in expected_cols if col in df.columns]
+                df = df[available_cols]
+                logger.info(f"📊 HTTP OHLCV columns selected: {available_cols}")
+            elif schema in ['trades', 'mbp-1', 'mbo']:
+                # Keep relevant columns for tick data
+                available_cols = ['date'] + [col for col in ['price', 'size', 'bid_px', 'ask_px', 'bid_sz', 'ask_sz'] if col in df.columns]
+                df = df[available_cols]
+                logger.info(f"📊 HTTP tick data columns selected: {available_cols}")
+            elif schema == 'statistics':
+                # Keep statistics columns
+                stat_cols = ['date'] + [col for col in df.columns if col not in ['ts_event', 'date']]
+                df = df[stat_cols]
+                logger.info(f"📊 HTTP statistics columns selected: {stat_cols}")
+            
+            df = df.sort_values('date').reset_index(drop=True)
+            
+            logger.info(f"✅ STEP 9: Retrieved {len(df)} days of option data via HTTP")
+            if len(df) > 0:
+                logger.info(f"📈 HTTP option sample - First row: {df.iloc[0].to_dict()}")
+            
+            return df
+            
+        except Exception as e:
+            logger.error(f"❌ STEP 6: HTTP option fallback FAILED with error: {e}")
+            logger.error(f"🔍 HTTP Error type: {type(e).__name__}")
+            
+            if "401" in str(e):
+                logger.error(f"🔐 HTTP DIAGNOSIS: Authentication failed - no auth headers in HTTP request")
+            elif "404" in str(e):
+                logger.error(f"📭 HTTP DIAGNOSIS: Endpoint not found or option data unavailable")
+            elif "403" in str(e):
+                logger.error(f"🚫 HTTP DIAGNOSIS: Forbidden - insufficient permissions")
+            
+            logger.info(f"🎭 STEP 7: All option history methods failed - returning empty DataFrame")
             return pd.DataFrame()
-        
-        df = pd.DataFrame(data)
-        
-        # Convert timestamp and clean up based on schema
-        df['date'] = pd.to_datetime(df['ts_event'] / 1e9, unit='s')
-        
-        # Format columns based on schema type
-        if schema == 'ohlcv-1d':
-            df = df[['date', 'open', 'high', 'low', 'close', 'volume']]
-        elif schema in ['trades', 'mbp-1', 'mbo']:
-            # Keep relevant columns for tick data
-            available_cols = ['date'] + [col for col in ['price', 'size', 'bid_px', 'ask_px', 'bid_sz', 'ask_sz'] if col in df.columns]
-            df = df[available_cols]
-        elif schema == 'statistics':
-            # Keep statistics columns
-            stat_cols = ['date'] + [col for col in df.columns if col not in ['ts_event', 'date']]
-            df = df[stat_cols]
-        
-        df = df.sort_values('date').reset_index(drop=True)
-        
-        logger.info(f"Retrieved {len(df)} days of option data")
-        return df
     
     def get_spot_price(self, underlying: str, date: Union[str, datetime]) -> float:
         """
@@ -752,22 +925,31 @@ class DatabentoBridge:
         Note:
             For HO contracts, always uses continuous contract regardless of input.
         """
+        date_str = date if isinstance(date, str) else date.strftime('%Y-%m-%d')
+        logger.info(f"🔍 STEP 1: Attempting spot price fetch for '{underlying}' on {date_str}")
+        
         # For HO contracts, always use continuous contract
         if underlying.startswith('HO') or underlying == 'OH':
             symbol_to_use = 'HO'
+            logger.info(f"🔗 SYMBOL MAPPING: '{underlying}' -> '{symbol_to_use}' (using HO continuous contract)")
         else:
             symbol_to_use = underlying
+            logger.info(f"🔗 SYMBOL MAPPING: Using '{symbol_to_use}' directly")
             
         # For futures, we use the futures price as "spot"
-        start_date = date if isinstance(date, str) else date.strftime('%Y-%m-%d')
+        start_date = date_str
         end_date = start_date
         
+        logger.info(f"📋 SPOT PRICE REQUEST: Fetching futures data for '{symbol_to_use}' on {date_str}")
         df = self.fetch_futures_continuous(symbol_to_use, start_date, end_date)
         
         if len(df) > 0:
-            return float(df['close'].iloc[0])
+            spot_price = float(df['close'].iloc[0])
+            logger.info(f"✅ STEP 2: Successfully retrieved spot price: ${spot_price:.4f}")
+            return spot_price
         else:
-            logger.warning(f"No spot price found for {underlying} on {date}")
+            logger.warning(f"📭 STEP 2: No futures data found for spot price calculation")
+            logger.warning(f"🎭 Using default fallback spot price: $2.5000")
             return 2.5  # Default fallback
 
 

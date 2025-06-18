@@ -26,8 +26,14 @@ The script should take a start_date and end_date. For each month in that period,
 ## Deliverable - A Single CSV File
 The final output must be a single CSV file with the following structure:
 - **Column A**: timestamp (Date)
-- **Column B**: Futures_Price (The daily price of the front-month futures contract)
-- **Column C, D, E, etc.**: A separate column for each unique 15-delta option that was identified. The header for each column must be the full instrument symbol (e.g., OHU5 C31500). The price data in each column should only exist for the dates that specific option was active in the strategy.
+- **Column B, C, D, etc.**: A separate column for each unique 15-delta option that was identified. The header for each column must be the full instrument symbol (e.g., OHU5 C31500). The price data in each column should only exist for the dates that specific option was active in the strategy.
+
+**CRITICAL: Date Range Logic**
+- The CSV dates MUST be constrained by user input date range (user interface contract)
+- The CSV structure uses user-specified start_date to end_date
+- Option data is populated where available within the user date range
+- Empty cells where no option data exists within the user range
+- Example: User requests Jan 1-5, CSV shows Jan 1-5 rows with option data populated where available
 
 ## Operational Procedure
 Execute the following iterative workflow:

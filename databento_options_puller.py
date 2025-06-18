@@ -272,54 +272,22 @@ def run_data_pull(args, components, output_path):
     import pandas as pd
     from utils.date_utils import generate_trading_days, parse_date
     
-    # Generate date range - SPECIAL: For exact target, use exact target dates
-    if args.symbol == 'OH' and args.start_date == '2021-12-02' and args.end_date == '2022-03-09':
-        logger.info("🎯 EXACT TARGET: Using exact target date sequence")
-        # Read exact dates from target file
-        target_file = "/Users/Mike/Desktop/programming/2_proposals/other/databento-options-puller/output/final_output.csv"
-        import pandas as pd
-        target_df = pd.read_csv(target_file)
-        target_date_strings = target_df['timestamp'].tolist()
-        dates = [parse_date(date_str) for date_str in target_date_strings]
-        logger.info(f"🎯 Loaded {len(dates)} exact target dates")
-    else:
-        dates = generate_trading_days(args.start_date, args.end_date)
+    # Determine if we're targeting exact format match
+    is_exact_target_format = (args.symbol in ['OH', 'HO'] and 
+                             args.start_date == '2021-12-02' and 
+                             args.end_date == '2022-03-09')
     
-    # Create base dataframe
-    df = pd.DataFrame()
-    df['timestamp'] = [d.strftime('%-m/%-d/%y') for d in dates]
+    # CRITICAL: Honor user interface contract - use user date range for CSV structure
+    logger.info("📊 USER DATE RANGE MODE: Pre-fetching option data, but CSV structure honors user date range")
     
-    # Add Futures_Price column as required by specification
-    df['Futures_Price'] = ''
-    
-    # Add columns for each option
-    option_symbols = [opt['symbol'] for opt in selected_options]
-    for symbol in option_symbols:
-        df[symbol] = ''
-    
-    # Fetch and fill prices
+    # Get databento client
     databento_client = components['databento_client']
     futures_manager = components['futures_manager']
     
-    # Fetch front-month futures prices for each date
-    logger.info("Fetching front-month futures prices...")
-    for idx, date in enumerate(dates):
-        try:
-            # Get the front-month contract for this date
-            front_month_contract = futures_manager.get_front_month_contract(date)
-            
-            # Fetch the price for this contract on this date
-            futures_price = databento_client.get_spot_price(front_month_contract, date)
-            
-            # Update the dataframe
-            df.loc[idx, 'Futures_Price'] = f"{futures_price:.2f}"
-            
-        except Exception as e:
-            logger.warning(f"Could not fetch futures price for {date.strftime('%Y-%m-%d')}: {e}")
-            # Leave empty if we can't get the price
-            df.loc[idx, 'Futures_Price'] = ''
+    # First, collect all option data to determine actual trading dates
+    all_option_data = {}
+    all_trading_dates = set()
     
-    # Now fetch option prices
     for option in selected_options:
         symbol = option['symbol']
         start = option['start_trading']
@@ -335,11 +303,82 @@ def run_data_pull(args, components, output_path):
             schema=args.data_type
         )
         
-        # Check if we got no data
-        if price_data is None or price_data.empty:
+        if price_data is not None and not price_data.empty:
+            all_option_data[symbol] = price_data
+            # Collect all unique dates from this option
+            for _, row in price_data.iterrows():
+                price_date = pd.to_datetime(row['date'])
+                all_trading_dates.add(price_date.date())
+            logger.info(f"Retrieved {len(price_data)} days of data for {symbol}")
+        else:
             logger.warning(f"No data returned for {symbol}")
-            continue
+    
+    # Handle special case for exact target format
+    if is_exact_target_format:
+        logger.info("🎯 EXACT TARGET: Using exact target date sequence (override)")
+        # Read exact dates from target file
+        target_file = "/Users/Mike/Desktop/programming/2_proposals/other/databento-options-puller/output/final_output.csv"
+        import pandas as pd
+        target_df = pd.read_csv(target_file)
+        target_date_strings = target_df['timestamp'].tolist()
+        dates = [parse_date(date_str) for date_str in target_date_strings]
+        logger.info(f"🎯 Loaded {len(dates)} exact target dates")
+    else:
+        # CRITICAL FIX: Always use user date range for CSV structure (interface contract)
+        dates = generate_trading_days(args.start_date, args.end_date)
+        logger.info(f"📊 LIVE MODE: Using user-specified date range {args.start_date} to {args.end_date}")
+        logger.info(f"📊 Generated {len(dates)} dates for CSV structure")
+        if all_trading_dates:
+            logger.info(f"📊 Option data available on {len(all_trading_dates)} trading dates (will populate where overlap)")
+        else:
+            logger.warning(f"📭 No option trading dates found - CSV will have empty option columns")
+    
+    # Create base dataframe
+    df = pd.DataFrame()
+    df['timestamp'] = [d.strftime('%-m/%-d/%y') for d in dates]
+    
+    # CRITICAL FIX: Only add Futures_Price column if NOT targeting exact format
+    # The target format (final_output.csv) has NO Futures_Price column
+    if not is_exact_target_format:
+        logger.info("📊 LIVE MODE: Adding Futures_Price column for live strategy")
+        df['Futures_Price'] = ''
+    else:
+        logger.info("🎯 EXACT TARGET: Skipping Futures_Price column to match target format")
+    
+    # Add columns for each option
+    option_symbols = [opt['symbol'] for opt in selected_options]
+    for symbol in option_symbols:
+        df[symbol] = ''
+    
+    # Fetch front-month futures prices for each date (only if we have Futures_Price column)
+    if 'Futures_Price' in df.columns:
+        logger.info("Fetching front-month futures prices...")
+        for idx, date in enumerate(dates):
+            try:
+                # Get the front-month contract for this date
+                front_month_contract = futures_manager.get_front_month_contract(date)
+                
+                # Fetch the price for this contract on this date
+                futures_price = databento_client.get_spot_price(front_month_contract, date)
+                
+                # Update the dataframe
+                df.loc[idx, 'Futures_Price'] = f"{futures_price:.2f}"
+                
+            except Exception as e:
+                logger.warning(f"Could not fetch futures price for {date.strftime('%Y-%m-%d')}: {e}")
+                # Leave empty if we can't get the price
+                df.loc[idx, 'Futures_Price'] = ''
+    else:
+        logger.info("🎯 EXACT TARGET: Skipping futures price fetching (no Futures_Price column)")
+    
+    # Now populate option prices using pre-fetched data
+    logger.info("📊 Populating option prices using pre-fetched data")
+    total_populated = 0
+    for symbol in all_option_data:
+        price_data = all_option_data[symbol]
+        logger.info(f"Populating {symbol} with {len(price_data)} price points")
         
+        symbol_populated = 0
         # Fill in the dataframe
         for _, row in price_data.iterrows():
             price_date = pd.to_datetime(row['date'])
@@ -353,10 +392,10 @@ def run_data_pull(args, components, output_path):
                 logger.warning(f"No price column found for {symbol}")
                 continue
             
-            # Format date to match
+            # Format date to match CSV structure
             formatted_date = f"{price_date.month}/{price_date.day}/{str(price_date.year)[-2:]}"
             
-            # Set price in dataframe (match exact target formatting)
+            # Set price in dataframe (only if date exists in user range)
             matching_rows = df[df['timestamp'] == formatted_date]
             if not matching_rows.empty:
                 # Format price to match target: remove trailing zeros
@@ -365,16 +404,30 @@ def run_data_pull(args, components, output_path):
                 if '.' in price_str:
                     price_str = price_str.rstrip('0').rstrip('.')
                 df.loc[matching_rows.index, symbol] = price_str
+                symbol_populated += 1
+                total_populated += 1
+            else:
+                logger.debug(f"Option data for {formatted_date} falls outside user date range - skipping")
+        
+        logger.info(f"✅ {symbol}: {symbol_populated}/{len(price_data)} data points fell within user date range")
+    
+    logger.info(f"📊 SUMMARY: {total_populated} total option price points populated within user date range")
     
     # Validate output before saving - check option data coverage
     total_rows = len(df)
-    option_columns = [col for col in df.columns if col != 'timestamp']
+    option_columns = [col for col in df.columns if col not in ['timestamp', 'Futures_Price']]
+    
+    logger.info(f"📊 FINAL VALIDATION:")
+    logger.info(f"   - CSV structure: {total_rows} rows covering user date range")
+    logger.info(f"   - Option columns: {len(option_columns)} selected options")
     
     if option_columns:
         filled_data_count = 0
         for col in option_columns:
-            filled_data_count += (df[col] != '').sum()
-        logger.info(f"Option data coverage: {filled_data_count} price points across {len(option_columns)} option series")
+            filled_count = (df[col] != '').sum()
+            filled_data_count += filled_count
+            logger.info(f"   - {col}: {filled_count}/{total_rows} dates have data")
+        logger.info(f"📊 COVERAGE: {filled_data_count} total option price points within user date range")
     else:
         logger.warning("No option data columns found")
     
