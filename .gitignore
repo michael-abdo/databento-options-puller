@@ -1,43 +1,64 @@
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Virtual Environment
+*.so
+.Python
 venv/
 env/
 ENV/
+.venv
 
 # IDE
-.idea/
 .vscode/
+.idea/
 *.swp
+*.swo
+*~
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Logs
-logs/*.log
+# Project specific
+logs/
+output/
+*.csv
+\!output/final_output.csv
+.env
 *.log
 
-# Output files
-output/*.csv
-*.csv.bak
+# Distribution
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Cache
-.cache/
-.pytest_cache/
-
-# Coverage
+# Testing
+.tox/
 .coverage
-htmlcov/
+.coverage.*
+.cache
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
 
-# Environment variables
-.env
-.env.local
+# Jupyter Notebook
+.ipynb_checkpoints
 
-# Temporary files
-*.tmp
-*.temp
-*.bak
+# pyenv
+.python-version
+EOF < /dev/null

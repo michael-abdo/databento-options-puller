@@ -31,12 +31,8 @@ This works immediately without any setup and shows you what the tool does.
 databento-options-puller/
 ├── README.md                    # Main documentation
 ├── requirements.txt             # Python dependencies  
-├── setup.py                     # Package installation
-├── .env                         # API key configuration (created on setup)
-│
-├── 🚀 Entry Points (2 files only!)
-│   ├── START_HERE.command       # Mac users: double-click to start
-│   └── databento_options_puller.py  # Core application (with --demo mode)
+├── START_HERE.command           # Mac users: double-click to start
+├── databento_options_puller.py  # Core application (with --demo mode)
 │
 ├── src/                         # Core modules
 │   ├── databento_client.py      # Databento API interface with fallback strategy
@@ -44,11 +40,20 @@ databento-options-puller/
 │   ├── futures_manager.py       # Futures contract handling (M+2 rolling strategy)
 │   └── options_manager.py       # Options chain management (15-delta selection)
 │
-├── tests/                       # Test suite
+├── tests/                       # Test suite (all tests now consolidated here)
+│   ├── test_api_key.py          # API key validation
 │   ├── test_delta_calculator.py # Unit tests for delta calc
-│   ├── test_data_processing.py  # Data handling tests
-│   ├── test_integration.py      # Integration tests
-│   └── test_api_key.py          # API key validation
+│   ├── test_exact_symbols.py    # Exact symbol matching tests
+│   ├── test_ho_options.py       # HO options tests
+│   ├── test_ho_symbols.py       # HO symbol tests  
+│   ├── test_option_formats.py   # Option format tests
+│   └── test_symbols.py          # Symbol handling tests
+│
+├── scripts/                     # Utility scripts
+│   ├── check_datasets.py        # Dataset inspection tool
+│   ├── check_option_datasets.py # Option dataset checker
+│   ├── create_exact_match.py    # Exact match generator
+│   └── override_exact_options.py# Option override utility
 │
 ├── config/                      # Configuration files
 │   ├── default_params.yaml      # Default parameters
@@ -61,30 +66,26 @@ databento-options-puller/
 │
 ├── docs/                        # Documentation
 │   ├── guides/                  # User guides
-│   │   ├── README_SIMPLE.md     # Plain English guide
-│   │   ├── FIRST_TIME_USERS_START_HERE.txt # Beginner instructions
 │   │   ├── DOCUMENTATION.md     # Complete user guide
 │   │   ├── DEPLOYMENT_GUIDE.md  # Production deployment
 │   │   ├── LIVE_DATA_ACTIVATION.md # Switching to live data
 │   │   ├── OUTPUT_COMPARISON.md # Output format details
-│   │   └── PROJECT_SUMMARY.md   # Project completion summary
-│   └── architecture/            # Technical docs
-│       ├── implementation_plan.md
-│       ├── project_requirements.md
-│       └── script_architecture.md
+│   │   ├── PROJECT_SUMMARY.md   # Project completion summary
+│   │   └── QUICK_REFERENCE.md   # Quick reference guide
+│   ├── architecture/            # Technical docs
+│   │   ├── implementation_plan.md
+│   │   ├── project_requirements.md
+│   │   └── script_architecture.md
+│   └── stages/                  # Development stages
+│       ├── contract_resolution_fix_tasks.txt
+│       └── feedback_loop_tasks.txt
 │
-├── examples/                    # Example files
-│   ├── example_output.csv       # Target output format
-│   ├── live_heating_oil_data.csv# Sample market data
-│   ├── test_output.csv          # Test results
-│   ├── live_data_demo.py        # Demo script
-│   ├── quick_example.py         # Quick start example
-│   └── working_example.py       # Working implementation
+├── output/                      # Generated outputs
+│   ├── demo/                    # Demo outputs
+│   └── final_output.csv         # Target output example
 │
-├── output/                      # Generated outputs (git-ignored)
-├── logs/                        # Application logs (git-ignored)
-├── demo_output/                 # Demo outputs
-└── archive/                     # Old/deprecated files
+├── logs/                        # Application logs (auto-generated)
+└── venv/                        # Virtual environment (auto-created)
 ```
 
 ## 🚀 How to Use

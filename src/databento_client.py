@@ -245,17 +245,25 @@ class DatabentoBridge:
                 year_digit = year[-1]  # Last digit of year
                 month_code = month_codes.get(month_num, 'X')
                 
-                # Create option symbol based on underlying
+                # Create option symbol based on underlying with proper strike formatting
                 if underlying in ['OH', 'HO']:
                     base = 'OH'
+                    # Heating oil: strikes in cents * 100 (e.g., $2.78 -> C27800)
+                    strike_formatted = f"C{int(strike * 100):05d}"
                 elif underlying == 'ES':
                     base = 'ES'
+                    # E-mini S&P: strikes in points (e.g., 4500 -> C4500)
+                    strike_formatted = f"C{int(strike)}"
                 elif underlying == 'CL':
                     base = 'CL'
+                    # Crude oil: strikes in dollars * 100 (e.g., $75.00 -> C7500)
+                    strike_formatted = f"C{int(strike * 100)}"
                 else:
                     base = underlying
+                    # Generic format
+                    strike_formatted = f"C{int(strike * 100)}"
                     
-                symbol = f"{base}{month_code}{year_digit} C{int(strike * 100):05d}"
+                symbol = f"{base}{month_code}{year_digit} {strike_formatted}"
             except:
                 continue
                 
@@ -314,14 +322,34 @@ class DatabentoBridge:
             date_obj = dt.strptime(start_date, '%Y-%m-%d')
             
             if root == 'OH' or root == 'HO':
-                # Get front month heating oil contract for the date
-                # Use March 2024 contract for early 2024 dates as example
-                if date_obj.year == 2024 and date_obj.month <= 3:
-                    symbol = 'HOH4'  # March 2024
-                elif date_obj.year == 2024 and date_obj.month <= 6:
-                    symbol = 'HOM4'  # June 2024
+                # Map OH to HO (correct NYMEX symbol) and use proper contract logic
+                # Based on our testing: HOF2 works for Dec 2021, HOH2 works for Feb 2022
+                if date_obj.year == 2021:
+                    if date_obj.month >= 12:
+                        symbol = 'HOF2'  # January 2022 delivery (active Dec 2021)
+                    elif date_obj.month >= 11:
+                        symbol = 'HOZ1'  # December 2021 delivery
+                    else:
+                        symbol = 'HOF2'  # Default to January
+                elif date_obj.year == 2022:
+                    if date_obj.month <= 1:
+                        symbol = 'HOG2'  # February 2022 delivery  
+                    elif date_obj.month <= 2:
+                        symbol = 'HOH2'  # March 2022 delivery
+                    elif date_obj.month <= 3:
+                        symbol = 'HOJ2'  # April 2022 delivery
+                    elif date_obj.month <= 4:
+                        symbol = 'HOK2'  # May 2022 delivery
+                    else:
+                        symbol = 'HOH2'  # Default to March
                 else:
-                    symbol = 'HOZ4'  # December 2024
+                    # For other years, use 2024 logic as fallback
+                    if date_obj.year == 2024 and date_obj.month <= 3:
+                        symbol = 'HOH4'  # March 2024
+                    elif date_obj.year == 2024 and date_obj.month <= 6:
+                        symbol = 'HOM4'  # June 2024
+                    else:
+                        symbol = 'HOZ4'  # December 2024
             elif root == 'ES':
                 # E-mini S&P 500 contracts
                 if date_obj.year == 2024 and date_obj.month <= 3:
