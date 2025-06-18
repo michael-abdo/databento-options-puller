@@ -13,7 +13,7 @@ import os
 import sys
 import argparse
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 # Add src directory to path
@@ -33,17 +33,15 @@ def parse_arguments():
         description="Pull NY Harbor ULSD (OH) futures and 15-delta call options data from Databento"
     )
     
-    # Date range (required)
+    # Date range (required unless --demo)
     parser.add_argument(
         '--start-date', 
         type=str,
-        required=True,
         help='Start date in YYYY-MM-DD format (e.g., 2021-12-01)'
     )
     parser.add_argument(
         '--end-date', 
         type=str,
-        required=True,
         help='End date in YYYY-MM-DD format (e.g., 2022-03-31)'
     )
     
@@ -67,6 +65,12 @@ def parse_arguments():
         '--mock-mode',
         action='store_true',
         help='Use mock data instead of real Databento API calls'
+    )
+    
+    parser.add_argument(
+        '--demo',
+        action='store_true',
+        help='Run quick demo showing sample output format'
     )
     
     # Strategy parameters
@@ -103,6 +107,14 @@ def parse_arguments():
 
 def validate_arguments(args):
     """Validate command line arguments."""
+    # Skip validation for demo mode
+    if args.demo:
+        return True
+        
+    # Check required arguments
+    if not args.start_date or not args.end_date:
+        raise ValueError("--start-date and --end-date are required")
+    
     # Validate date formats
     try:
         datetime.strptime(args.start_date, '%Y-%m-%d')
@@ -230,11 +242,68 @@ def run_data_pull(args, components, output_path):
     return df
 
 
+def run_demo():
+    """Run a quick demo showing sample output."""
+    import csv
+    import random
+    
+    print("🚀 Databento Options Puller - Demo Mode")
+    print("=" * 50)
+    print("Creating sample options data...")
+    
+    # Create output directory
+    os.makedirs("demo_output", exist_ok=True)
+    
+    # Generate sample data
+    output_file = "demo_output/sample_options_data.csv"
+    with open(output_file, 'w', newline='') as f:
+        writer = csv.writer(f)
+        
+        # Header
+        contracts = ["OHF24 C27800", "OHG24 C24500", "OHH24 C27000"]
+        writer.writerow(["timestamp", "Futures_Price"] + contracts)
+        
+        # Generate 10 days of sample data
+        start_date = datetime.now() - timedelta(days=10)
+        for i in range(10):
+            date = start_date + timedelta(days=i)
+            row = [date.strftime("%-m/%-d/%y")]
+            row.append(f"{2.5 + random.uniform(-0.1, 0.1):.2f}")  # Futures price
+            
+            # Option prices
+            for _ in contracts:
+                if random.random() > 0.3:  # 70% chance of data
+                    row.append(f"{random.uniform(0.10, 0.20):.2f}")
+                else:
+                    row.append("")  # Missing data
+            
+            writer.writerow(row)
+    
+    print(f"✅ Created sample data: {output_file}")
+    print("\n📊 Sample output:")
+    print("-" * 50)
+    
+    # Show first few lines
+    with open(output_file, 'r') as f:
+        for i, line in enumerate(f):
+            if i < 5:
+                print(line.strip())
+    
+    print("-" * 50)
+    print("\n💡 This is what your output will look like.")
+    print("To pull real data, run without --demo flag.")
+    
+
 def main():
     """Main entry point."""
     try:
         # Parse arguments
         args = parse_arguments()
+        
+        # Handle demo mode
+        if args.demo:
+            run_demo()
+            return 0
         
         # Setup logging
         setup_logging(

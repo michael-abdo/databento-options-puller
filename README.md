@@ -32,14 +32,9 @@ databento-options-puller/
 ├── setup.py                     # Package installation
 ├── .env                         # API key configuration (created on setup)
 │
-├── 🚀 Quick Start Files
+├── 🚀 Entry Points (2 files only!)
 │   ├── START_HERE.command       # Mac users: double-click to start
-│   ├── easy_setup.py            # Interactive setup wizard
-│   ├── simple_demo.py           # Run demo without setup
-│   └── run_puller.py            # Interactive data puller
-│
-├── 📊 Main Application
-│   └── databento_options_puller.py  # Core application
+│   └── databento_options_puller.py  # Core application (with --demo mode)
 │
 ├── src/                         # Core modules
 │   ├── databento_client.py      # Databento API interface
