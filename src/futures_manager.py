@@ -32,9 +32,13 @@ class FuturesManager:
     - Expiry date calculations
     """
     
-    def __init__(self):
-        """Initialize futures manager with OH contract specifications."""
-        self.root_symbol = "HO"  # CME/NYMEX symbol for ULSD heating oil futures
+    def __init__(self, root_symbol: str = "HO"):
+        """Initialize futures manager with contract specifications.
+        
+        Args:
+            root_symbol: Root symbol for futures (default: HO for heating oil)
+        """
+        self.root_symbol = root_symbol
         self.contract_months = {
             1: 'F',   # January
             2: 'G',   # February  

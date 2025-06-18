@@ -53,7 +53,7 @@ class OptionsManager:
         # Strategy parameters
         self.target_delta = 0.15
         self.delta_tolerance = 0.02
-        self.underlying_root = "HO"  # CME/NYMEX symbol for ULSD heating oil futures
+        self.underlying_root = self.futures_mgr.root_symbol  # Get from futures manager
         self.option_type = "call"
         
         # Caches for performance
@@ -169,14 +169,20 @@ class OptionsManager:
             return None
         
         # Filter for call options only
-        call_options = [opt for opt in options_chain if opt.get('option_type', 'C') == 'C']
+        # Filter by option type
+        if self.option_type == 'put':
+            filtered_options = [opt for opt in options_chain if opt.get('option_type', 'P') == 'P']
+        elif self.option_type == 'both':
+            filtered_options = options_chain  # Include both calls and puts
+        else:  # Default to calls
+            filtered_options = [opt for opt in options_chain if opt.get('option_type', 'C') == 'C']
         
-        if not call_options:
-            logger.warning(f"No call options found in chain for {target_contract}")
+        if not filtered_options:
+            logger.warning(f"No {self.option_type} options found in chain for {target_contract}")
             return None
         
         # Extract strikes
-        strikes = [opt['strike'] for opt in call_options]
+        strikes = [opt['strike'] for opt in filtered_options]
         
         # Calculate expiry date
         expiry_date = self.futures_mgr.get_expiry_date(target_contract)

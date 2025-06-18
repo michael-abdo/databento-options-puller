@@ -73,6 +73,22 @@ def parse_arguments():
         help='Run quick demo showing sample output format'
     )
     
+    # Symbol and option type
+    parser.add_argument(
+        '--symbol',
+        type=str,
+        default='HO',
+        help='Underlying symbol to pull options for (default: HO - NY Harbor ULSD)'
+    )
+    
+    parser.add_argument(
+        '--option-type',
+        type=str,
+        choices=['call', 'put', 'both'],
+        default='call',
+        help='Type of options to pull (default: call)'
+    )
+    
     # Strategy parameters
     parser.add_argument(
         '--target-delta',
@@ -147,7 +163,7 @@ def setup_components(args):
     delta_calculator = DeltaCalculator(risk_free_rate=args.risk_free_rate)
     
     # Initialize managers
-    futures_manager = FuturesManager()
+    futures_manager = FuturesManager(root_symbol=args.symbol)
     
     options_manager = OptionsManager(
         databento_client=databento_client,
@@ -155,10 +171,11 @@ def setup_components(args):
         delta_calculator=delta_calculator
     )
     
-    # Set target delta on options manager
+    # Set target delta and option type on options manager
     options_manager.target_delta = args.target_delta
+    options_manager.option_type = args.option_type
     
-    logger.info(f"Initialized components (target_delta={args.target_delta:.2f}, risk_free_rate={args.risk_free_rate:.2%})")
+    logger.info(f"Initialized components (symbol={args.symbol}, option_type={args.option_type}, target_delta={args.target_delta:.2f}, risk_free_rate={args.risk_free_rate:.2%})")
     
     return {
         'databento_client': databento_client,
@@ -171,7 +188,7 @@ def setup_components(args):
 def run_data_pull(args, components, output_path):
     """Run the data pull with Databento."""
     logger = get_logger('main')
-    logger.info(f"Running data pull: {args.start_date} to {args.end_date}")
+    logger.info(f"Running data pull for {args.symbol} {args.option_type} options: {args.start_date} to {args.end_date}")
     
     # Get monthly option selections
     options_manager = components['options_manager']
@@ -242,14 +259,14 @@ def run_data_pull(args, components, output_path):
     return df
 
 
-def run_demo():
+def run_demo(symbol="HO", option_type="call"):
     """Run a quick demo showing sample output."""
     import csv
     import random
     
     print("🚀 Databento Options Puller - Demo Mode")
     print("=" * 50)
-    print("Creating sample options data...")
+    print(f"Creating sample {symbol} {option_type} options data...")
     
     # Create output directory
     os.makedirs("output/demo", exist_ok=True)
@@ -302,7 +319,7 @@ def main():
         
         # Handle demo mode
         if args.demo:
-            run_demo()
+            run_demo(args.symbol, args.option_type)
             return 0
         
         # Setup logging

@@ -133,7 +133,43 @@ fi
 # Step 4: Create necessary directories
 mkdir -p output logs
 
-# Step 5: Get date range
+# Step 5: Get symbol and data type
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "                  Symbol Selection"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "What symbol do you want to pull options for?"
+echo "(Press Enter for default: HO - NY Harbor ULSD Heating Oil)"
+echo ""
+read -p "Symbol [HO]: " SYMBOL
+SYMBOL=${SYMBOL:-HO}
+
+echo ""
+echo "What type of options?"
+echo "1) Call options (default)"
+echo "2) Put options"
+echo "3) Both"
+echo ""
+read -p "Choose (1-3) [1]: " option_type
+option_type=${option_type:-1}
+
+case $option_type in
+    1)
+        OPTION_TYPE="call"
+        ;;
+    2)
+        OPTION_TYPE="put"
+        ;;
+    3)
+        OPTION_TYPE="both"
+        ;;
+    *)
+        OPTION_TYPE="call"
+        ;;
+esac
+
+# Step 6: Get date range
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "                  Select Date Range"
@@ -171,26 +207,33 @@ case $date_choice in
         ;;
 esac
 
-# Step 6: Set output filename
-OUTPUT_FILE="output/databento_options_${START_DATE}_${END_DATE}.csv"
+# Step 7: Set output filename
+OUTPUT_FILE="output/${SYMBOL}_${OPTION_TYPE}_options_${START_DATE}_${END_DATE}.csv"
 
-# Step 7: Run the application
+# Step 8: Run the application
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "                  Running Data Pull"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
+echo "📊 Symbol: $SYMBOL"
+echo "📈 Option Type: $OPTION_TYPE"
 echo "📅 Date Range: $START_DATE to $END_DATE"
 echo "📄 Output File: $OUTPUT_FILE"
 echo ""
 echo "Fetching data..."
 echo ""
 
-# Run the main application
-python3 databento_options_puller.py \
-    --start-date "$START_DATE" \
-    --end-date "$END_DATE" \
-    --output "$OUTPUT_FILE"
+# Build command with parameters
+CMD="python3 databento_options_puller.py"
+CMD="$CMD --start-date \"$START_DATE\""
+CMD="$CMD --end-date \"$END_DATE\""
+CMD="$CMD --output \"$OUTPUT_FILE\""
+CMD="$CMD --symbol \"$SYMBOL\""
+CMD="$CMD --option-type \"$OPTION_TYPE\""
+
+# Run the command
+eval $CMD
 
 # Check if successful
 if [ $? -eq 0 ]; then
