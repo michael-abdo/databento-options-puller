@@ -169,7 +169,50 @@ case $option_type in
         ;;
 esac
 
-# Step 6: Get date range
+# Step 6: Get data type
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "                  Data Type Selection"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "What type of data do you want?"
+echo "1) OHLCV - Daily bars (default)"
+echo "2) Trades - Tick-by-tick trades"
+echo "3) Quotes - Best bid/ask quotes"
+echo "4) MBO - Market by order"
+echo "5) Statistics - Daily statistics"
+echo ""
+read -p "Choose (1-5) [1]: " data_type_choice
+data_type_choice=${data_type_choice:-1}
+
+case $data_type_choice in
+    1)
+        DATA_TYPE="ohlcv-1d"
+        DATA_DESC="Daily OHLCV"
+        ;;
+    2)
+        DATA_TYPE="trades"
+        DATA_DESC="Tick Trades"
+        ;;
+    3)
+        DATA_TYPE="mbp-1"
+        DATA_DESC="Best Quotes"
+        ;;
+    4)
+        DATA_TYPE="mbo"
+        DATA_DESC="Market by Order"
+        ;;
+    5)
+        DATA_TYPE="statistics"
+        DATA_DESC="Daily Stats"
+        ;;
+    *)
+        DATA_TYPE="ohlcv-1d"
+        DATA_DESC="Daily OHLCV"
+        ;;
+esac
+
+# Step 7: Get date range
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "                  Select Date Range"
@@ -207,10 +250,12 @@ case $date_choice in
         ;;
 esac
 
-# Step 7: Set output filename
-OUTPUT_FILE="output/${SYMBOL}_${OPTION_TYPE}_options_${START_DATE}_${END_DATE}.csv"
+# Step 8: Set output filename
+# Sanitize data type for filename
+DATA_TYPE_CLEAN=$(echo "$DATA_TYPE" | tr '/' '_')
+OUTPUT_FILE="output/${SYMBOL}_${OPTION_TYPE}_${DATA_TYPE_CLEAN}_${START_DATE}_${END_DATE}.csv"
 
-# Step 8: Run the application
+# Step 9: Run the application
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "                  Running Data Pull"
@@ -218,6 +263,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 echo "📊 Symbol: $SYMBOL"
 echo "📈 Option Type: $OPTION_TYPE"
+echo "📉 Data Type: $DATA_DESC"
 echo "📅 Date Range: $START_DATE to $END_DATE"
 echo "📄 Output File: $OUTPUT_FILE"
 echo ""
@@ -231,6 +277,7 @@ CMD="$CMD --end-date \"$END_DATE\""
 CMD="$CMD --output \"$OUTPUT_FILE\""
 CMD="$CMD --symbol \"$SYMBOL\""
 CMD="$CMD --option-type \"$OPTION_TYPE\""
+CMD="$CMD --data-type \"$DATA_TYPE\""
 
 # Run the command
 eval $CMD

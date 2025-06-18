@@ -12,7 +12,7 @@ Automatically downloads options trading data and saves it as a spreadsheet. Perf
 
 ### Alternative: Run the Demo First
 ```bash
-python3 simple_demo.py
+python3 databento_options_puller.py --demo
 ```
 This works immediately without any setup and shows you what the tool does.
 
@@ -20,8 +20,10 @@ This works immediately without any setup and shows you what the tool does.
 - **Works in 5 minutes** - Seriously, we timed it
 - **No Python knowledge needed** - If you can double-click, you can use this
 - **Free demo mode** - Test everything without spending money on API access
-- **Excel-ready output** - Opens directly in Excel/Numbers
+- **Smart file naming** - Output files automatically named by symbol, date range, and data type
+- **Auto-open results** - CSV files open automatically in Excel/Numbers on completion
 - **Real production data** - When you're ready, connect to Databento for live market data
+- **Robust fallback system** - Continues working even when some data sources are unavailable
 
 ## 📁 Project Structure
 
@@ -37,14 +39,10 @@ databento-options-puller/
 │   └── databento_options_puller.py  # Core application (with --demo mode)
 │
 ├── src/                         # Core modules
-│   ├── databento_client.py      # Databento API interface
+│   ├── databento_client.py      # Databento API interface with fallback strategy
 │   ├── delta_calculator.py      # Black-Scholes calculations
-│   ├── futures_manager.py       # Futures contract handling
-│   ├── options_manager.py       # Options chain management
-│   ├── option_generator.py      # Output generation logic
-│   ├── example_analyzer.py      # Example data analysis
-│   ├── output_validator.py      # Output validation
-│   └── parameter_refiner.py     # Parameter optimization
+│   ├── futures_manager.py       # Futures contract handling (M+2 rolling strategy)
+│   └── options_manager.py       # Options chain management (15-delta selection)
 │
 ├── tests/                       # Test suite
 │   ├── test_delta_calculator.py # Unit tests for delta calc
@@ -105,7 +103,8 @@ That's it. No terminal knowledge needed. No Python setup required.
 - ✅ Installs all dependencies
 - ✅ Saves your API key (one time)
 - ✅ Runs the data pull
-- ✅ Opens the CSV in Excel/Numbers
+- ✅ Saves with descriptive filename (e.g., `OH_call_ohlcv-1d_20240102_to_20240105.csv`)
+- ✅ Opens the CSV automatically in Excel/Numbers
 
 ### For Developers:
 ```bash

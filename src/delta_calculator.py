@@ -378,19 +378,16 @@ def main():
     time_to_expiry = 60 / 252  # 60 trading days
     volatility = 0.30  # 30%
     
-    print(f"Testing delta calculation:")
-    print(f"Spot: ${spot:.2f}, Time: {time_to_expiry:.3f}y, Vol: {volatility:.1%}")
-    print()
+    logger.info("Testing delta calculation")
+    logger.info(f"Spot: ${spot:.2f}, Time: {time_to_expiry:.3f}y, Vol: {volatility:.1%}")
     
     # Calculate deltas for all strikes
-    print("Strike   Delta    Price")
-    print("-" * 25)
+    logger.info("Strike   Delta    Price")
+    logger.info("-" * 25)
     for strike in strikes:
         delta = calc.calculate_delta(spot, strike, time_to_expiry, volatility)
         price = calc.calculate_option_price(spot, strike, time_to_expiry, volatility)
-        print(f"${strike:.2f}   {delta:.4f}   ${price:.3f}")
-    
-    print()
+        logger.info(f"${strike:.2f}   {delta:.4f}   ${price:.3f}")
     
     # Test target delta selection
     target_delta = 0.15
@@ -398,8 +395,8 @@ def main():
         spot, strikes, time_to_expiry, volatility, target_delta
     )
     
-    print(f"Target delta: {target_delta:.2f}")
-    print(f"Selected strike: ${best_strike:.2f} (delta: {actual_delta:.4f})")
+    logger.info(f"Target delta: {target_delta:.2f}")
+    logger.info(f"Selected strike: ${best_strike:.2f} (delta: {actual_delta:.4f})")
     
     # Test implied volatility
     option_price = 0.10
@@ -408,9 +405,9 @@ def main():
         option_price, spot, strike, time_to_expiry
     )
     
-    print(f"\nImplied volatility test:")
-    print(f"Option price: ${option_price:.2f}, Strike: ${strike:.2f}")
-    print(f"Implied vol: {implied_vol:.2%}")
+    logger.info("Implied volatility test:")
+    logger.info(f"Option price: ${option_price:.2f}, Strike: ${strike:.2f}")
+    logger.info(f"Implied vol: {implied_vol:.2%}")
 
 
 if __name__ == "__main__":

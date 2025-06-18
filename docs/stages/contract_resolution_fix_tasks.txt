@@ -1,0 +1,86 @@
+- Fix Root Cause: Bridge Gap Between Contract Calculation Systems
+  - ANALYSIS PHASE (COMPLETED)
+    - Identified architectural flaw in databento_client.py hardcoded 2024 logic
+    - Confirmed FuturesManager has correct dynamic contract calculation
+    - Verified OptionsManager has both components but doesn't coordinate them
+    - Traced error: 2025 dates → wrong contracts → 404 API errors
+  - IMPLEMENTATION PHASE
+    - Step 1: Modify DatabentoBridge Methods (15 minutes)
+      - Update get_spot_price() method signature to accept explicit contracts
+        - Add logic to detect if input is contract (e.g., "HOQ5") vs root symbol (e.g., "HO")
+        - Use contract directly if provided, fall back to hardcoded logic for root symbols
+        - Maintain backward compatibility with existing callers
+      - Update fetch_futures_continuous() method signature similarly
+        - Add same contract detection logic
+        - Preserve existing hardcoded contract mapping as fallback
+        - Ensure no breaking changes to existing API
+      - Test contract detection logic with both formats
+        - Verify "HOQ5" is treated as explicit contract
+        - Verify "HO" falls back to existing logic
+        - Test edge cases and invalid inputs
+    - Step 2: Update OptionsManager Calls (10 minutes)
+      - Modify _get_spot_price() method
+        - Calculate exact contract using futures_mgr.get_front_month_contract(date)
+        - Pass calculated contract to client.get_spot_price() instead of root symbol
+        - Update error handling to include contract information
+        - Add debug logging to show which contract is being used
+      - Modify _estimate_volatility() method
+        - Calculate exact contract for historical data window
+        - Pass calculated contract to client.fetch_futures_continuous()
+        - Ensure volatility calculation uses correct underlying contract
+        - Update logging to show contract and date range
+      - Review all other client method calls in OptionsManager
+        - Check for any other calls that need contract coordination
+        - Ensure consistent pattern across all API interactions
+        - Verify no calls still use outdated root symbol approach
+    - Step 3: Test & Validate (5 minutes)
+      - Test with 2025 dates to verify fix works
+        - Run with HO symbol and 2025-06-02 date
+        - Verify HOQ5 contract is calculated and used correctly
+        - Confirm API calls succeed with correct contract
+      - Test with 2024 dates to verify no regression
+        - Run with same parameters but 2024 dates
+        - Ensure existing hardcoded logic still works as fallback
+        - Verify no breaking changes to working functionality
+      - Test with multiple symbols (ES, CL) and date ranges
+        - Confirm fix works across different instruments
+        - Verify contract calculation logic works for all supported symbols
+        - Test edge cases like year boundaries and month transitions
+    - Step 4: Clean Up and Documentation (5 minutes)
+      - Add comprehensive logging for contract resolution
+        - Log which contract was calculated vs which was used
+        - Add debug output showing contract resolution path
+        - Include contract information in error messages
+      - Update method docstrings with new contract parameter behavior
+        - Document that methods accept both contracts and root symbols
+        - Explain fallback behavior for backward compatibility
+        - Add examples of both usage patterns
+      - Update error messages to include contract context
+        - Show which contract was attempted when API calls fail
+        - Include both calculated contract and original symbol in logs
+        - Make debugging easier with detailed context
+  - VERIFICATION PHASE
+    - Before/After Comparison
+      - Before: 2025-06-02 with HO → fails with HOZ4 404 error
+      - After: 2025-06-02 with HO → works with HOQ5 data
+      - Regression check: 2024-01-02 → still works with existing logic
+    - Integration Testing
+      - Full end-to-end test with START_HERE.command
+      - Test all data types (OHLCV, trades, quotes, MBO, statistics)
+      - Verify both call and put options work correctly
+      - Test multiple date ranges and symbols
+    - Performance Validation
+      - Ensure no performance degradation from additional contract calculation
+      - Verify caching still works effectively with new contract keys
+      - Check that API call patterns remain efficient
+    - Error Handling Verification
+      - Test behavior with invalid contracts
+      - Verify graceful fallback when contract calculation fails
+      - Ensure error messages are helpful for debugging
+  - COMPLETION CRITERIA
+    - All 2025+ dates work correctly with proper contract calculation
+    - No regression in existing 2024 functionality
+    - Backward compatibility maintained for all existing callers
+    - Comprehensive logging and error reporting in place
+    - Documentation updated to reflect new behavior
+    - All tests passing with both old and new date ranges

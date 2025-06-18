@@ -377,39 +377,39 @@ def main():
     manager = FuturesManager()
     
     # Test contract symbol generation
-    print("Testing contract symbol generation:")
+    logger.info("Testing contract symbol generation:")
     test_dates = ['2022-01-01', '2022-02-01', '2022-03-01']
     for date_str in test_dates:
         symbol = manager.get_contract_symbol(date_str)
-        print(f"  {date_str} → {symbol}")
+        logger.info(f"  {date_str} → {symbol}")
     
     # Test front month identification
-    print("\nTesting front month identification:")
+    logger.info("Testing front month identification:")
     test_dates = ['2021-12-01', '2021-12-15', '2022-01-01', '2022-01-15']
     for date_str in test_dates:
         front_month = manager.get_front_month_contract(date_str)
-        print(f"  {date_str} → {front_month}")
+        logger.info(f"  {date_str} → {front_month}")
     
     # Test roll schedule
-    print("\nTesting roll schedule:")
+    logger.info("Testing roll schedule:")
     rolls = manager.get_roll_schedule('2021-12-01', '2022-04-01')
     for roll in rolls:
-        print(f"  {roll['roll_date'].strftime('%Y-%m-%d')}: "
+        logger.info(f"  {roll['roll_date'].strftime('%Y-%m-%d')}: "
               f"{roll['from_contract']} → {roll['to_contract']}")
     
     # Test M+2 contracts
-    print("\nTesting M+2 contract identification:")
+    logger.info("Testing M+2 contract identification:")
     test_dates = ['2021-12-01', '2022-01-01', '2022-02-01']
     for date_str in test_dates:
         m_plus_2 = manager.get_m_plus_n_contract(date_str, 2)
-        print(f"  {date_str} + 2 months → {m_plus_2}")
+        logger.info(f"  {date_str} + 2 months → {m_plus_2}")
     
     # Test expiry dates
-    print("\nTesting expiry date calculation:")
+    logger.info("Testing expiry date calculation:")
     test_contracts = ['OHF2', 'OHG2', 'OHH2', 'OHJ2']
     for contract in test_contracts:
         expiry = manager.get_expiry_date(contract)
-        print(f"  {contract} expires: {expiry.strftime('%Y-%m-%d')}")
+        logger.info(f"  {contract} expires: {expiry.strftime('%Y-%m-%d')}")
 
 
 if __name__ == "__main__":

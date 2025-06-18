@@ -192,27 +192,32 @@ class OptionsManager:
         volatility = self._estimate_volatility(spot_price, trade_date)
         
         # Find target delta strike
+        # For puts, use 'put', otherwise use 'call'
+        option_type_for_calc = 'put' if self.option_type == 'put' else 'call'
+        # For puts, target delta should be negative (e.g., -0.15)
+        target_delta_adjusted = -self.target_delta if self.option_type == 'put' else self.target_delta
         best_strike, actual_delta = self.delta_calc.find_target_delta_strike(
-            spot_price, strikes, time_to_expiry, volatility, self.target_delta, 'call'
+            spot_price, strikes, time_to_expiry, volatility, target_delta_adjusted, option_type_for_calc
         )
         
         # Find the option with this strike
         selected_option = None
-        for opt in call_options:
+        for opt in filtered_options:
             if abs(opt['strike'] - best_strike) < 0.01:  # Match within $0.01
                 selected_option = opt
                 break
         
         if selected_option:
             # Build full symbol
-            symbol = self._build_option_symbol(target_contract, best_strike, 'C')
+            option_code = 'P' if self.option_type == 'put' else 'C'
+            symbol = self._build_option_symbol(target_contract, best_strike, option_code)
             
             return {
                 'symbol': symbol,
                 'strike': best_strike,
                 'delta': actual_delta,
                 'underlying': target_contract,
-                'option_type': 'C',
+                'option_type': option_code,
                 'expiry_date': expiry_date,
                 'time_to_expiry': time_to_expiry,
                 'volatility': volatility
@@ -270,13 +275,25 @@ class OptionsManager:
             return self.spot_price_cache[date_str]
         
         try:
-            spot_price = self.client.get_spot_price(self.underlying_root, date)
+            # Calculate the exact contract for this date to avoid hardcoded 2024 logic
+            contract = self.futures_mgr.get_front_month_contract(date)
+            logger.debug(f"Calculated front month contract for {date_str}: {contract}")
+            
+            # Get spot price using the calculated contract
+            spot_price = self.client.get_spot_price(contract, date)
             self.spot_price_cache[date_str] = spot_price
             return spot_price
             
         except Exception as e:
-            logger.error(f"Failed to get spot price for {date_str}: {e}")
-            return 2.5  # Fallback price
+            logger.warning(f"Failed to get spot price using calculated contract, trying root symbol fallback")
+            try:
+                # Fallback to root symbol if contract calculation fails
+                spot_price = self.client.get_spot_price(self.underlying_root, date)
+                self.spot_price_cache[date_str] = spot_price
+                return spot_price
+            except Exception as e2:
+                logger.error(f"Failed to get spot price for {date_str}: {e2}")
+                return 2.5  # Fallback price
     
     def _estimate_volatility(self, spot_price: float, date: datetime, 
                            window_days: int = 30) -> float:
@@ -296,9 +313,20 @@ class OptionsManager:
             start_date = date - timedelta(days=window_days + 10)  # Extra buffer
             end_date = date
             
-            price_history = self.client.fetch_futures_continuous(
-                self.underlying_root, start_date, end_date
-            )
+            try:
+                # Calculate the appropriate contract for the volatility window
+                # Use contract active at the end date for consistency
+                contract = self.futures_mgr.get_front_month_contract(end_date)
+                logger.debug(f"Using contract {contract} for volatility calculation from {start_date} to {end_date}")
+                
+                price_history = self.client.fetch_futures_continuous(
+                    contract, start_date, end_date
+                )
+            except Exception as contract_error:
+                logger.warning(f"Contract calculation failed, using root symbol fallback: {contract_error}")
+                price_history = self.client.fetch_futures_continuous(
+                    self.underlying_root, start_date, end_date
+                )
             
             if len(price_history) > 5:
                 volatility = self.delta_calc.estimate_volatility_from_history(
@@ -362,13 +390,25 @@ class OptionsManager:
             option_type: 'C' or 'P'
             
         Returns:
-            Full option symbol (e.g., 'OHF2 C27800')
+            Full option symbol (e.g., 'ESH4 C5075', 'OHF2 C27800')
         """
-        # Convert strike to integer representation (cents)
-        strike_int = int(round(strike * 100))
-        
-        # Format: "OHF2 C27800"
-        symbol = f"{underlying_contract} {option_type}{strike_int:05d}"
+        # Different formatting for different instruments
+        if underlying_contract.startswith('ES'):
+            # ES options: strike is in dollars (e.g., 'ESH4 C5075')
+            strike_int = int(round(strike))
+            symbol = f"{underlying_contract} {option_type}{strike_int}"
+        elif underlying_contract.startswith(('OH', 'HO')):
+            # Oil options: strike is in cents × 100 (e.g., 'OHF2 C27800')
+            strike_int = int(round(strike * 100))
+            symbol = f"{underlying_contract} {option_type}{strike_int:05d}"
+        elif underlying_contract.startswith('CL'):
+            # Crude oil: strike is in dollars × 100 (e.g., 'CLM4 C7500')
+            strike_int = int(round(strike * 100))
+            symbol = f"{underlying_contract} {option_type}{strike_int}"
+        else:
+            # Default: use dollars
+            strike_int = int(round(strike))
+            symbol = f"{underlying_contract} {option_type}{strike_int}"
         
         return symbol
     
@@ -475,24 +515,24 @@ def main():
     manager = OptionsManager()
     
     # Test monthly option identification
-    print("Testing monthly option identification:")
+    logger.info("Testing monthly option identification:")
     start_date = "2021-12-01"
     end_date = "2022-03-31"
     
     options = manager.identify_monthly_options(start_date, end_date)
     
-    print(f"\nFound {len(options)} options:")
+    logger.info(f"Found {len(options)} options:")
     for opt in options:
-        print(f"  {opt['selection_date'].strftime('%Y-%m-%d')}: {opt['symbol']} "
+        logger.info(f"  {opt['selection_date'].strftime('%Y-%m-%d')}: {opt['symbol']} "
               f"(Δ={opt['actual_delta']:.4f}, K=${opt['strike']:.2f})")
-        print(f"    Active: {opt['start_trading'].strftime('%Y-%m-%d')} to "
+        logger.info(f"    Active: {opt['start_trading'].strftime('%Y-%m-%d')} to "
               f"{opt['end_trading'].strftime('%Y-%m-%d')}")
     
     # Test validation
-    print("\nTesting option validation:")
+    logger.info("Testing option validation:")
     for opt in options:
         is_valid = manager.validate_option_selection(opt)
-        print(f"  {opt['symbol']}: {'✓' if is_valid else '✗'}")
+        logger.info(f"  {opt['symbol']}: {'✓' if is_valid else '✗'}")
 
 
 if __name__ == "__main__":
