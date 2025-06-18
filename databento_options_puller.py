@@ -7,7 +7,6 @@ from Databento API and generate a single CSV output.
 
 Usage:
     python databento_options_puller.py --start-date 2021-12-01 --end-date 2022-03-31 --output output.csv
-    python databento_options_puller.py --example-mode  # Use example data for testing
 """
 
 import os
@@ -21,8 +20,6 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent / 'src'))
 sys.path.append(str(Path(__file__).parent))
 
-from src.example_analyzer import ExampleAnalyzer
-from src.option_generator import OptionGenerator
 from src.databento_client import DatabentoBridge
 from src.delta_calculator import DeltaCalculator
 from src.futures_manager import FuturesManager
@@ -36,15 +33,17 @@ def parse_arguments():
         description="Pull NY Harbor ULSD (OH) futures and 15-delta call options data from Databento"
     )
     
-    # Date range (required unless using example mode)
+    # Date range (required)
     parser.add_argument(
         '--start-date', 
         type=str,
+        required=True,
         help='Start date in YYYY-MM-DD format (e.g., 2021-12-01)'
     )
     parser.add_argument(
         '--end-date', 
         type=str,
+        required=True,
         help='End date in YYYY-MM-DD format (e.g., 2022-03-31)'
     )
     
@@ -64,12 +63,6 @@ def parse_arguments():
     )
     
     # Mode selection
-    parser.add_argument(
-        '--example-mode',
-        action='store_true',
-        help='Use example data structure for testing (ignores date parameters)'
-    )
-    
     parser.add_argument(
         '--mock-mode',
         action='store_true',
@@ -102,7 +95,7 @@ def parse_arguments():
     parser.add_argument(
         '--quiet', '-q',
         action='store_true',
-        help='Suppress console output (only log to file)'
+        help='Suppress console output except errors'
     )
     
     return parser.parse_args()
@@ -110,20 +103,16 @@ def parse_arguments():
 
 def validate_arguments(args):
     """Validate command line arguments."""
-    if not args.example_mode:
-        if not args.start_date or not args.end_date:
-            raise ValueError("--start-date and --end-date are required unless using --example-mode")
-        
-        # Validate date formats
-        try:
-            datetime.strptime(args.start_date, '%Y-%m-%d')
-            datetime.strptime(args.end_date, '%Y-%m-%d')
-        except ValueError as e:
-            raise ValueError(f"Invalid date format. Use YYYY-MM-DD: {e}")
+    # Validate date formats
+    try:
+        datetime.strptime(args.start_date, '%Y-%m-%d')
+        datetime.strptime(args.end_date, '%Y-%m-%d')
+    except ValueError as e:
+        raise ValueError(f"Invalid date format. Use YYYY-MM-DD: {e}")
     
     # Check API key
     api_key = args.api_key or os.getenv('DATABENTO_API_KEY')
-    if not api_key and not args.mock_mode and not args.example_mode:
+    if not api_key and not args.mock_mode:
         raise ValueError("Databento API key required. Set DATABENTO_API_KEY environment variable or use --api-key")
     
     return True
@@ -134,28 +123,31 @@ def setup_components(args):
     logger = get_logger('main')
     
     # Initialize Databento client
-    if args.example_mode or args.mock_mode:
+    if args.mock_mode:
         logger.info("Using mock Databento client")
         databento_client = DatabentoBridge()  # Will use mock mode
     else:
         api_key = args.api_key or os.getenv('DATABENTO_API_KEY')
         logger.info("Initializing real Databento client")
-        databento_client = DatabentoBridge(api_key=api_key)
+        databento_client = DatabentoBridge(api_key)
     
-    # Initialize calculation components
+    # Initialize calculators
     delta_calculator = DeltaCalculator(risk_free_rate=args.risk_free_rate)
-    futures_manager = FuturesManager()
-    options_manager = OptionsManager(
+    
+    # Initialize managers
+    futures_manager = FuturesManager(
         databento_client=databento_client,
-        delta_calculator=delta_calculator,
-        futures_manager=futures_manager
+        underlying='HO'  # NY Harbor ULSD
     )
     
-    # Set target delta
-    options_manager.target_delta = args.target_delta
+    options_manager = OptionsManager(
+        databento_client=databento_client,
+        futures_manager=futures_manager,
+        delta_calculator=delta_calculator,
+        target_delta=args.target_delta
+    )
     
-    logger.info(f"Initialized components (target_delta={args.target_delta:.2f}, "
-               f"risk_free_rate={args.risk_free_rate:.2%})")
+    logger.info(f"Initialized components (target_delta={args.target_delta:.2f}, risk_free_rate={args.risk_free_rate:.2%})")
     
     return {
         'databento_client': databento_client,
@@ -165,87 +157,64 @@ def setup_components(args):
     }
 
 
-def run_example_mode(args, output_path):
-    """Run in example mode using existing example data."""
+def run_data_pull(args, components, output_path):
+    """Run the data pull with Databento."""
     logger = get_logger('main')
-    logger.info("Running in example mode")
-    
-    # Analyze example to get facts
-    example_path = Path(__file__).parent / 'example_output.csv'
-    analyzer = ExampleAnalyzer(str(example_path))
-    facts = analyzer.analyze()
-    
-    logger.info(f"Analyzed example: {facts['basic_info']['num_rows']} rows, "
-               f"{facts['basic_info']['num_columns']} columns")
-    
-    # Generate using stub data
-    generator = OptionGenerator(facts, use_real_data=False)
-    df = generator.generate()
-    
-    # Save output
-    df.to_csv(output_path, index=False)
-    logger.info(f"Saved example-based output to {output_path}")
-    
-    return df
-
-
-def run_real_mode(args, components, output_path):
-    """Run with real Databento data."""
-    logger = get_logger('main')
-    logger.info(f"Running real mode: {args.start_date} to {args.end_date}")
+    logger.info(f"Running data pull: {args.start_date} to {args.end_date}")
     
     # Get monthly option selections
     options_manager = components['options_manager']
     selected_options = options_manager.identify_monthly_options(
-        args.start_date, args.end_date
+        start_date=args.start_date,
+        end_date=args.end_date
     )
     
     if not selected_options:
         raise RuntimeError("No options identified by strategy")
     
-    logger.info(f"Strategy identified {len(selected_options)} options:")
-    for opt in selected_options:
-        logger.info(f"  {opt['selection_date'].strftime('%Y-%m-%d')}: {opt['symbol']} "
-                   f"(Δ={opt['actual_delta']:.4f}, K=${opt['strike']:.2f})")
+    logger.info(f"Identified {len(selected_options)} options for the period")
     
-    # Create output dataframe
-    start_date = datetime.strptime(args.start_date, '%Y-%m-%d')
-    end_date = datetime.strptime(args.end_date, '%Y-%m-%d')
-    
-    # Generate trading days
+    # Create dataframe structure
+    import pandas as pd
     from utils.date_utils import generate_trading_days
-    trading_days = generate_trading_days(start_date, end_date)
     
-    # Format dates
-    formatted_dates = []
-    for date in trading_days:
-        # Use no-padding format to match example
-        formatted_date = f"{date.month}/{date.day}/{str(date.year)[-2:]}"
-        formatted_dates.append(formatted_date)
+    # Generate date range
+    dates = generate_trading_days(args.start_date, args.end_date)
     
     # Create base dataframe
-    import pandas as pd
-    df = pd.DataFrame({'timestamp': formatted_dates})
+    df = pd.DataFrame()
+    df['timestamp'] = [d.strftime('%-m/%-d/%y') for d in dates]
     
-    # Add each option's data
-    for option_info in selected_options:
-        symbol = option_info['symbol']
-        logger.info(f"Fetching price data for {symbol}")
+    # Add columns for each option
+    option_symbols = [opt['symbol'] for opt in selected_options]
+    for symbol in option_symbols:
+        df[symbol] = ''
+    
+    # Fetch and fill prices
+    databento_client = components['databento_client']
+    
+    for option in selected_options:
+        symbol = option['symbol']
+        start = option['start_date']
+        end = option['end_date']
         
-        # Get price history
-        price_data = options_manager.get_option_price_history(
-            symbol,
-            option_info['start_trading'],
-            option_info['end_trading']
+        logger.info(f"Fetching data for {symbol}: {start} to {end}")
+        
+        # Get option prices
+        price_data = databento_client.get_options_data(
+            symbol=symbol,
+            start_date=start,
+            end_date=end
         )
         
-        # Add column for this option
-        df[symbol] = None
+        if price_data is None or price_data.empty:
+            logger.warning(f"No data returned for {symbol}")
+            continue
         
-        # Fill in the prices for active dates
-        for _, price_row in price_data.iterrows():
-            price_date = price_row['date']
-            close_price = price_row['close']
+        # Fill in the dataframe
+        for _, row in price_data.iterrows():
+            price_date = pd.to_datetime(row['date'])
+            close_price = row['close']
             
             # Format date to match
             formatted_date = f"{price_date.month}/{price_date.day}/{str(price_date.year)[-2:]}"
@@ -257,7 +226,7 @@ def run_real_mode(args, components, output_path):
     
     # Save output
     df.to_csv(output_path, index=False)
-    logger.info(f"Saved real data output to {output_path}")
+    logger.info(f"Saved data to {output_path}")
     
     return df
 
@@ -286,33 +255,23 @@ def main():
         if output_path.exists():
             logger.warning(f"Output file {output_path} already exists and will be overwritten")
         
-        # Run in appropriate mode
-        if args.example_mode:
-            df = run_example_mode(args, output_path)
-        else:
-            components = setup_components(args)
-            df = run_real_mode(args, components, output_path)
+        # Run the data pull
+        components = setup_components(args)
+        df = run_data_pull(args, components, output_path)
         
         # Print summary
         print(f"\n✅ Successfully generated options data!")
         print(f"📊 Output: {len(df)} rows, {len(df.columns)} columns")
         print(f"💾 Saved to: {output_path}")
         
-        if not args.quiet:
-            print(f"\n📋 Column summary:")
-            for col in df.columns:
-                non_null = df[col].notna().sum()
-                print(f"  {col}: {non_null} non-null values")
-        
-        logger.info("✅ Databento Options Data Puller completed successfully")
+        return 0
         
     except Exception as e:
+        logger = get_logger('main')
+        logger.error(f"Fatal error: {e}", exc_info=True)
         print(f"\n❌ Error: {e}")
-        if hasattr(e, '__traceback__'):
-            import traceback
-            traceback.print_exc()
-        sys.exit(1)
+        return 1
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
