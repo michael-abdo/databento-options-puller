@@ -99,23 +99,31 @@ databento-options-puller/
 └── archive/                     # Old/deprecated files
 ```
 
-## 🚀 Three Ways to Start
+## 🚀 How to Use
 
-### Option 1: The "I Don't Know Terminal" Method
-1. Double-click `CLICK_ME_TO_START.command`
-2. Follow the prompts
-3. Done!
+### For Everyone: Just Double-Click!
+1. **Double-click `START_HERE.command`**
+2. Enter your API key (first time only)
+3. Choose your date range
+4. Get your data!
 
-### Option 2: The "Show Me First" Method
-1. Open Terminal (Command+Space, type "Terminal")
-2. Drag this folder onto the Terminal window
-3. Type: `python3 simple_demo.py`
-4. See sample output immediately
+That's it. No terminal knowledge needed. No Python setup required.
 
-### Option 3: The "I Know What I'm Doing" Method
+### What Happens:
+- ✅ Checks/installs Python automatically
+- ✅ Sets up virtual environment
+- ✅ Installs all dependencies
+- ✅ Saves your API key (one time)
+- ✅ Runs the data pull
+- ✅ Opens the CSV in Excel/Numbers
+
+### For Developers:
 ```bash
-./setup_mac.sh
-./run.sh
+# Direct command line usage
+python3 databento_options_puller.py \
+    --start-date 2024-01-01 \
+    --end-date 2024-01-31 \
+    --output my_data.csv
 ```
 
 ### 3️⃣ Essential Resources
