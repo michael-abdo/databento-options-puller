@@ -1,82 +1,75 @@
 #!/usr/bin/env python3
 """
-Test HO options chains to see if we can get option data
+Test getting HO options using correct parent symbol format
 """
 
 import databento as db
+from dotenv import load_dotenv
+import os
+import pandas as pd
 
-def test_ho_options():
-    """Test HO options chains"""
-    api_key = "db-3gVxurfuD5jfS6uJB8Df36YUrg7pv"
-    client = db.Historical(api_key)
+load_dotenv()
+client = db.Historical(os.getenv('DATABENTO_API_KEY'))
+
+print("Getting HO options definitions...")
+
+try:
+    # Get all HO options definitions
+    definitions = client.timeseries.get_range(
+        dataset='GLBX.MDP3',
+        schema='definition',
+        symbols='HO.OPT',  # Correct parent symbol for options
+        stype_in='parent',
+        start='2021-12-01',
+        end='2021-12-02'
+    )
+    df = definitions.to_df()
+    print(f"Got {len(df)} option definitions")
     
-    print("🎯 Testing HO OPTIONS chains...")
-    print("=" * 60)
-    
-    # Working HO contracts from previous test
-    working_contracts = [
-        ('HOF2', '2021-12-15', '2021-12-16'),  # January delivery
-        ('HOH2', '2022-02-15', '2022-02-16'),  # March delivery
-    ]
-    
-    for contract, start_date, end_date in working_contracts:
-        print(f"\n📊 Testing options on {contract} ({start_date})...")
+    if len(df) > 0:
+        # Show available columns
+        print(f"\nColumns: {df.columns.tolist()}")
         
-        # Try to find option symbols based on the contract
-        option_symbols_to_test = []
-        
-        # Generate potential option symbols based on target strikes
-        # Target file has: C27800, C24500, C27000, C30200, C35000
-        strikes = [27800, 24500, 27000, 30200, 35000]
-        
-        for strike in strikes:
-            # Format: HOF2 C27800 (matches target format but with HO instead of OH)
-            option_symbol = f"{contract} C{strike}"
-            option_symbols_to_test.append(option_symbol)
-        
-        print(f"   Testing {len(option_symbols_to_test)} option symbols...")
-        
-        working_options = []
-        
-        for option_symbol in option_symbols_to_test:
-            try:
-                print(f"   📈 Testing {option_symbol}...", end=" ")
-                data = client.timeseries.get_range(
-                    dataset='GLBX.MDP3',
-                    symbols=[option_symbol],
-                    schema='ohlcv-1d',
-                    start=start_date,
-                    end=end_date
-                )
+        # Filter for call options expiring in Feb 2022
+        if 'instrument_class' in df.columns and 'expiration' in df.columns:
+            # Convert expiration to datetime for filtering
+            df['expiration'] = pd.to_datetime(df['expiration'])
+            
+            # Filter for Feb 2022 expiry calls
+            feb_2022_calls = df[
+                (df['instrument_class'] == 'C') &  # Calls
+                (df['expiration'].dt.year == 2022) &
+                (df['expiration'].dt.month == 2)
+            ]
+            
+            print(f"\nFound {len(feb_2022_calls)} Feb 2022 call options")
+            
+            if len(feb_2022_calls) > 0:
+                # Sort by strike price
+                feb_2022_calls = feb_2022_calls.sort_values('strike_price')
                 
-                df = data.to_df()
-                if len(df) > 0:
-                    print(f"✅ SUCCESS! Found {len(df)} days")
-                    sample_row = df.iloc[0]
-                    print(f"      Option Price=${sample_row['close']:.3f}")
-                    working_options.append(option_symbol)
-                else:
-                    print("❌ No data")
+                # Show some options
+                print("\nFeb 2022 call options (sorted by strike):")
+                cols_to_show = ['symbol', 'strike_price', 'expiration']
+                print(feb_2022_calls[cols_to_show].head(10))
+                
+                # Now try to get price data for one of these options
+                test_symbol = feb_2022_calls.iloc[0]['symbol']
+                print(f"\n\nTesting price data for: {test_symbol}")
+                
+                price_data = client.timeseries.get_range(
+                    dataset='GLBX.MDP3',
+                    schema='ohlcv-1d',
+                    symbols=test_symbol,
+                    start='2021-12-01',
+                    end='2021-12-02'
+                )
+                price_df = price_data.to_df()
+                print(f"Got {len(price_df)} price records")
+                if len(price_df) > 0:
+                    print(price_df)
                     
-            except Exception as e:
-                if "did not resolve" in str(e):
-                    print("❌ No symbol")
-                else:
-                    print(f"❌ Error: {e}")
-        
-        print(f"   📋 Working options for {contract}: {len(working_options)}")
-        for opt in working_options:
-            print(f"      - {opt}")
-        
-        if working_options:
-            print(f"   ✅ {contract} has working options!")
-        else:
-            print(f"   ❌ {contract} has no working options")
-    
-    print("\n" + "=" * 60)
-    print("📋 SUMMARY:")
-    print("HO futures data exists ✅")
-    print("HO options data - testing results above")
-
-if __name__ == "__main__":
-    test_ho_options()
+except Exception as e:
+    print(f"Error: {e}")
+    import traceback
+    traceback.print_exc()

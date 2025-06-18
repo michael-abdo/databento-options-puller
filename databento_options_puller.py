@@ -15,6 +15,10 @@ import argparse
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Add src directory to path
 sys.path.append(str(Path(__file__).parent / 'src'))
@@ -331,31 +335,10 @@ def run_data_pull(args, components, output_path):
             schema=args.data_type
         )
         
-        # Check if we got mock data (all 0.50 values) or no data
-        is_mock_data = False
-        if price_data is not None and not price_data.empty and 'close' in price_data:
-            # Check if all values are close to 0.50 (mock data)
-            close_values = price_data['close'].dropna()
-            if len(close_values) > 0:
-                is_mock_data = all(abs(val - 0.50) < 0.05 for val in close_values)
-        
-        if price_data is None or price_data.empty or is_mock_data:
-            if price_data is None or price_data.empty:
-                logger.warning(f"No data returned for {symbol}")
-            else:
-                logger.warning(f"Mock data detected for {symbol}")
-            
-            # SPECIAL: Generate realistic data for exact target options
-            if symbol in ['OHF2 C27800', 'OHG2 C24500', 'OHH2 C27000', 'OHJ2 C30200', 'OHK2 C35000']:
-                logger.info(f"🎯 Generating exact target prices for {symbol}")
-                # Use the exact prices from target file
-                price_data = generate_target_option_data(symbol, start, end)
-                if price_data is not None and not price_data.empty:
-                    logger.info(f"✅ Generated {len(price_data)} exact price points for {symbol}")
-                else:
-                    continue
-            else:
-                continue
+        # Check if we got no data
+        if price_data is None or price_data.empty:
+            logger.warning(f"No data returned for {symbol}")
+            continue
         
         # Fill in the dataframe
         for _, row in price_data.iterrows():

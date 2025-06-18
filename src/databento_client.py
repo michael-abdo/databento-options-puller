@@ -181,7 +181,40 @@ class DatabentoBridge:
                     trend = 1 + (days_elapsed * 0.001)  # Small upward trend
                     noise = np.random.normal(1, 0.02)   # 2% daily volatility
                     
-                    price = base_price * trend * noise
+                    # Special handling for options
+                    if ' C' in symbol or ' P' in symbol:
+                        # Extract strike from symbol
+                        try:
+                            parts = symbol.split(' ')
+                            strike_str = parts[1][1:]  # Remove 'C' or 'P'
+                            strike = float(strike_str) / 100.0  # Convert cents to dollars
+                        except:
+                            strike = 3.0  # Default strike
+                        
+                        # Get futures price (assume around 2.5 for HO)
+                        futures_price = 2.5
+                        
+                        # Calculate time to expiry (assume 60 days for simplicity)
+                        days_to_expiry = max(1, 60 - days_elapsed)
+                        time_to_expiry = days_to_expiry / 365.0
+                        
+                        # Simple option pricing for 15-delta options
+                        moneyness = futures_price / strike
+                        
+                        if moneyness > 1.0:  # In the money
+                            intrinsic = futures_price - strike
+                            time_value = 0.1 * np.sqrt(time_to_expiry)
+                        else:  # Out of the money
+                            intrinsic = 0
+                            # For 15-delta options, typical values range from 0.05 to 0.20
+                            time_value = 0.15 * np.sqrt(time_to_expiry) * (strike / futures_price)
+                        
+                        # Add randomness
+                        volatility = np.random.normal(1.0, 0.1)
+                        price = max(0.01, (intrinsic + time_value) * volatility)
+                        price = round(price, 2)
+                    else:
+                        price = base_price * trend * noise
                     
                     # Ensure positive prices
                     price = max(0.01, price)
@@ -318,40 +351,13 @@ class DatabentoBridge:
             symbol = root
             logger.debug(f"Using explicit contract: {symbol}")
         else:
-            # It's a root symbol (e.g., "HO"), map to specific contract using hardcoded logic
-            date_obj = dt.strptime(start_date, '%Y-%m-%d')
-            
+            # It's a root symbol (e.g., "HO"), use continuous contract
             if root == 'OH' or root == 'HO':
-                # Map OH to HO (correct NYMEX symbol) and use proper contract logic
-                # Based on our testing: HOF2 works for Dec 2021, HOH2 works for Feb 2022
-                if date_obj.year == 2021:
-                    if date_obj.month >= 12:
-                        symbol = 'HOF2'  # January 2022 delivery (active Dec 2021)
-                    elif date_obj.month >= 11:
-                        symbol = 'HOZ1'  # December 2021 delivery
-                    else:
-                        symbol = 'HOF2'  # Default to January
-                elif date_obj.year == 2022:
-                    if date_obj.month <= 1:
-                        symbol = 'HOG2'  # February 2022 delivery  
-                    elif date_obj.month <= 2:
-                        symbol = 'HOH2'  # March 2022 delivery
-                    elif date_obj.month <= 3:
-                        symbol = 'HOJ2'  # April 2022 delivery
-                    elif date_obj.month <= 4:
-                        symbol = 'HOK2'  # May 2022 delivery
-                    else:
-                        symbol = 'HOH2'  # Default to March
-                else:
-                    # For other years, use 2024 logic as fallback
-                    if date_obj.year == 2024 and date_obj.month <= 3:
-                        symbol = 'HOH4'  # March 2024
-                    elif date_obj.year == 2024 and date_obj.month <= 6:
-                        symbol = 'HOM4'  # June 2024
-                    else:
-                        symbol = 'HOZ4'  # December 2024
+                # For HO root symbol, always use continuous contract
+                symbol = 'HO'
             elif root == 'ES':
                 # E-mini S&P 500 contracts
+                date_obj = dt.strptime(start_date, '%Y-%m-%d')
                 if date_obj.year == 2024 and date_obj.month <= 3:
                     symbol = 'ESH4'  # March 2024
                 elif date_obj.year == 2024 and date_obj.month <= 6:
@@ -362,6 +368,7 @@ class DatabentoBridge:
                     symbol = 'ESZ4'  # December 2024
             elif root == 'CL':
                 # Crude oil contracts
+                date_obj = dt.strptime(start_date, '%Y-%m-%d')
                 if date_obj.year == 2024 and date_obj.month <= 2:
                     symbol = 'CLG4'  # February 2024
                 elif date_obj.year == 2024 and date_obj.month <= 5:
@@ -387,13 +394,38 @@ class DatabentoBridge:
                 else:
                     end_date_api = end_date
                     
-                data = self.client.timeseries.get_range(
-                    dataset='GLBX.MDP3',
-                    schema='ohlcv-1d',
-                    symbols=symbol,
-                    start=start_date,
-                    end=end_date_api
-                )
+                # Always use continuous contract for HO futures
+                if symbol.startswith('HO'):
+                    # Use continuous front month contract
+                    continuous_symbol = "HO.c.0"
+                    data = self.client.timeseries.get_range(
+                        dataset='GLBX.MDP3',
+                        schema='ohlcv-1d',
+                        symbols=continuous_symbol,
+                        stype_in='continuous',
+                        start=start_date,
+                        end=end_date_api
+                    )
+                elif self._is_explicit_contract(symbol):
+                    data = self.client.timeseries.get_range(
+                        dataset='GLBX.MDP3',
+                        schema='ohlcv-1d',
+                        symbols=symbol,
+                        stype_in='raw_symbol',
+                        start=start_date,
+                        end=end_date_api
+                    )
+                else:
+                    # Use continuous front month contract
+                    continuous_symbol = f"{symbol}.c.0"
+                    data = self.client.timeseries.get_range(
+                        dataset='GLBX.MDP3',
+                        schema='ohlcv-1d',
+                        symbols=continuous_symbol,
+                        stype_in='continuous',
+                        start=start_date,
+                        end=end_date_api
+                    )
                 
                 # Convert to DataFrame
                 df = data.to_df()
@@ -454,14 +486,70 @@ class DatabentoBridge:
         Get available options for a specific expiry month.
         
         Args:
-            underlying: Underlying symbol (e.g., 'ES')
-            expiry_month: Target expiry (e.g., '2024-03')
+            underlying: Underlying symbol (e.g., 'HO')
+            expiry_month: Target expiry (e.g., '2022-02')
             trade_date: Date to get chain for
             
         Returns:
             List of option contract details
         """
         logger.info(f"Fetching options chain for {underlying} {expiry_month} on {trade_date}")
+        
+        # Use real Databento API if available
+        if not self.mock_mode and self.client:
+            try:
+                # For HO futures, options use OH prefix
+                option_symbol = 'OH.OPT' if underlying == 'HO' else f'{underlying}.OPT'
+                
+                # Get option definitions
+                definitions = self.client.timeseries.get_range(
+                    dataset='GLBX.MDP3',
+                    schema='definition',
+                    symbols=option_symbol,
+                    stype_in='parent',
+                    start=trade_date,
+                    end=pd.to_datetime(trade_date) + timedelta(days=1)
+                )
+                df = definitions.to_df()
+                
+                if len(df) == 0:
+                    logger.warning(f"No options found for {option_symbol}")
+                    return []
+                
+                # Parse expiry month
+                target_year = int(expiry_month.split('-')[0])
+                target_month = int(expiry_month.split('-')[1])
+                
+                # Convert expiration to datetime
+                df['expiration'] = pd.to_datetime(df['expiration'])
+                
+                # Filter for target month call options
+                options = df[
+                    (df['symbol'].str.contains(' C', na=False)) &  # Calls only
+                    (df['expiration'].dt.year == target_year) &
+                    (df['expiration'].dt.month == target_month)
+                ]
+                
+                result = []
+                for _, row in options.iterrows():
+                    symbol = row['symbol']
+                    # Strike price is already in dollars in the data
+                    strike = float(row['strike_price'])
+                    
+                    result.append({
+                        'symbol': symbol,
+                        'underlying': underlying,
+                        'strike': strike,
+                        'option_type': 'C',
+                        'expiry': row['expiration'].strftime('%Y-%m-%d')
+                    })
+                
+                logger.info(f"Found {len(result)} call options for {expiry_month}")
+                return result
+                
+            except Exception as e:
+                logger.error(f"Error fetching options chain: {e}")
+                # Fall back to mock mode
         
         if self.mock_mode:
             # Use mock response
@@ -662,14 +750,19 @@ class DatabentoBridge:
             Spot price
             
         Note:
-            If 'underlying' is an explicit contract, it will be used directly.
-            If 'underlying' is a root symbol, it will be mapped to a specific contract.
+            For HO contracts, always uses continuous contract regardless of input.
         """
+        # For HO contracts, always use continuous contract
+        if underlying.startswith('HO') or underlying == 'OH':
+            symbol_to_use = 'HO'
+        else:
+            symbol_to_use = underlying
+            
         # For futures, we use the futures price as "spot"
         start_date = date if isinstance(date, str) else date.strftime('%Y-%m-%d')
         end_date = start_date
         
-        df = self.fetch_futures_continuous(underlying, start_date, end_date)
+        df = self.fetch_futures_continuous(symbol_to_use, start_date, end_date)
         
         if len(df) > 0:
             return float(df['close'].iloc[0])

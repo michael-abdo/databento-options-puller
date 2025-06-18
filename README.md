@@ -1,119 +1,176 @@
-# Databento Options Puller - Zero Setup Required! 🚀
+# NY Harbor ULSD Options Data Puller 🚀
 
 ## 🎯 What This Does
-Automatically downloads options trading data and saves it as a spreadsheet. Perfect for traders who need historical options data without the hassle.
+Automatically downloads NY Harbor Ultra Low Sulfur Diesel (ULSD) futures and 15-delta call options data from Databento. Perfect for traders who need historical options data with zero hassle.
 
-## 🏃 Instant Start (No Setup!)
+## 🏃 Instant Start (No Setup Required!)
 
-### For Mac Users - Just Double-Click!
-1. Find the file `CLICK_ME_TO_START.command` in this folder
-2. Double-click it
-3. That's it! Everything installs automatically
-
-### Alternative: Run the Demo First
+### Universal: Just Run START_HERE!
 ```bash
-python3 databento_options_puller.py --demo
+./START_HERE
 ```
-This works immediately without any setup and shows you what the tool does.
+
+**That's it!** The command file handles everything:
+- ✅ Checks Python version
+- ✅ Creates virtual environment  
+- ✅ Installs dependencies
+- ✅ Sets up API key
+- ✅ Fetches real market data
+- ✅ Saves with date-based filename
+
+### Quick Examples
+```bash
+# Interactive mode (prompts for dates)
+./START_HERE
+
+# With specific dates
+./START_HERE --start-date 2021-12-02 --end-date 2022-03-09
+
+# Setup only (don't run data collection)
+./START_HERE --setup-only
+```
 
 ## ✨ Features That Actually Matter
 - **Works in 5 minutes** - Seriously, we timed it
 - **No Python knowledge needed** - If you can double-click, you can use this
 - **Free demo mode** - Test everything without spending money on API access
-- **Smart file naming** - Output files automatically named by symbol, date range, and data type
-- **Auto-open results** - CSV files open automatically in Excel/Numbers on completion
+- **Smart file naming** - Output files automatically named: `HO_options_YYYYMMDD_to_YYYYMMDD.csv`
+- **Date-based organization** - Easy to find your data files by date range
 - **Real production data** - When you're ready, connect to Databento for live market data
 - **Robust fallback system** - Continues working even when some data sources are unavailable
 
 ## 📁 Project Structure
 
 ```
-databento-options-puller/
-├── README.md                    # Main documentation
-├── requirements.txt             # Python dependencies  
-├── START_HERE.command           # Mac users: double-click to start
-├── databento_options_puller.py  # Core application (with --demo mode)
+option-data-repo/
+├── README.md                    # 📖 Main documentation
+├── requirements.txt             # 📦 Python dependencies  
+├── START_HERE                   # 🎯 Main setup & execution command
+├── databento_options_puller.py  # ⚙️  Core data fetching logic
+├── .env                         # 🔐 User configuration (auto-generated)
+├── .env.example                 # 📝 Configuration template
+├── .gitignore                   # 🚫 Version control ignores
 │
-├── src/                         # Core modules
-│   ├── databento_client.py      # Databento API interface with fallback strategy
+├── src/                         # 🔧 Core modules
+│   ├── __init__.py              # Package initialization
+│   ├── databento_client.py      # Databento API interface
 │   ├── delta_calculator.py      # Black-Scholes calculations
-│   ├── futures_manager.py       # Futures contract handling (M+2 rolling strategy)
+│   ├── futures_manager.py       # Futures contract handling (M+2 rolling)
 │   └── options_manager.py       # Options chain management (15-delta selection)
 │
-├── tests/                       # Test suite (all tests now consolidated here)
-│   ├── test_api_key.py          # API key validation
-│   ├── test_delta_calculator.py # Unit tests for delta calc
-│   ├── test_exact_symbols.py    # Exact symbol matching tests
-│   ├── test_ho_options.py       # HO options tests
-│   ├── test_ho_symbols.py       # HO symbol tests  
-│   ├── test_option_formats.py   # Option format tests
-│   └── test_symbols.py          # Symbol handling tests
+├── utils/                       # 🛠️  Utility modules
+│   ├── __init__.py              # Package initialization
+│   ├── date_utils.py            # Date/calendar functions
+│   ├── symbol_utils.py          # Symbol parsing utilities
+│   └── logging_config.py        # Logging configuration
 │
-├── scripts/                     # Utility scripts
+├── tests/                       # 🧪 Comprehensive test suite
+│   ├── __init__.py              # Package initialization
+│   ├── test_api_key.py          # API key validation tests
+│   ├── test_delta_calculator.py # Black-Scholes calculation tests
+│   ├── test_exact_symbols.py    # Symbol matching tests
+│   ├── test_ho_options.py       # Heating oil options tests
+│   ├── test_ho_symbols.py       # HO symbol format tests
+│   ├── test_option_formats.py   # Option format validation tests
+│   ├── test_symbols.py          # General symbol handling tests
+│   ├── test_cme_options_search.py    # CME options search tests
+│   ├── test_continuous_futures.py    # Continuous futures tests
+│   ├── test_databento_http.py        # HTTP API tests
+│   ├── test_databento_symbols.py     # Databento symbol tests
+│   ├── test_direct_options.py        # Direct options tests
+│   ├── test_final_output.py          # Output validation tests
+│   ├── test_futures_symbols.py       # Futures symbol tests
+│   ├── test_ho_options_final.py      # Final HO options tests
+│   ├── test_ho_options_format.py     # HO format tests
+│   ├── test_nymex_dataset.py         # NYMEX dataset tests
+│   └── test_options_symbols.py       # Options symbol tests
+│
+├── scripts/                     # 📜 Utility and analysis scripts
 │   ├── check_datasets.py        # Dataset inspection tool
 │   ├── check_option_datasets.py # Option dataset checker
 │   ├── create_exact_match.py    # Exact match generator
-│   └── override_exact_options.py# Option override utility
+│   ├── override_exact_options.py# Option override utility
+│   ├── analyze_oh_options.py    # Options analysis tool
+│   ├── check_lo_futures.py      # LO futures checker
+│   ├── fix_option_prices.py     # Price fixing utility
+│   ├── generate_final_output.py # Output generation script
+│   └── validate_workflow.py     # Workflow validation
 │
-├── config/                      # Configuration files
+├── config/                      # ⚙️  Configuration files
+│   ├── __init__.py              # Package initialization
 │   ├── default_params.yaml      # Default parameters
 │   └── production_config.yaml   # Production settings
 │
-├── utils/                       # Utility modules
-│   ├── date_utils.py            # Date/calendar functions
-│   ├── symbol_utils.py          # Symbol parsing
-│   └── logging_config.py        # Logging setup
-│
-├── docs/                        # Documentation
-│   ├── guides/                  # User guides
+├── docs/                        # 📚 Comprehensive documentation
+│   ├── QUICKSTART.md            # Quick start guide
+│   ├── EXAMPLE_USAGE.md         # Usage examples
+│   ├── BLOCKER_REPORT.md        # Issue tracking
+│   ├── claude.md                # Development notes
+│   ├── databento_diagnostic_report.md # API diagnostics
+│   ├── Final Testing Results.png # Test results visualization
+│   │
+│   ├── guides/                  # 📖 User guides
 │   │   ├── DOCUMENTATION.md     # Complete user guide
 │   │   ├── DEPLOYMENT_GUIDE.md  # Production deployment
 │   │   ├── LIVE_DATA_ACTIVATION.md # Switching to live data
 │   │   ├── OUTPUT_COMPARISON.md # Output format details
 │   │   ├── PROJECT_SUMMARY.md   # Project completion summary
 │   │   └── QUICK_REFERENCE.md   # Quick reference guide
-│   ├── architecture/            # Technical docs
+│   │
+│   ├── architecture/            # 🏗️  Technical documentation
 │   │   ├── implementation_plan.md
 │   │   ├── project_requirements.md
 │   │   └── script_architecture.md
-│   └── stages/                  # Development stages
+│   │
+│   └── stages/                  # 🔄 Development stages
 │       ├── contract_resolution_fix_tasks.txt
 │       └── feedback_loop_tasks.txt
 │
-├── output/                      # Generated outputs
-│   ├── demo/                    # Demo outputs
-│   └── final_output.csv         # Target output example
+├── output/                      # 📊 Generated data files
+│   ├── demo/                    # Demo output examples
+│   │   └── sample_options_data.csv
+│   ├── final_output.csv         # Target output example
+│   ├── real_final_test.csv      # Real data test output
+│   ├── test_output.csv          # Test output
+│   └── HO_call_ohlcv-1d_*.csv   # Generated data files (auto-named)
 │
-├── logs/                        # Application logs (auto-generated)
-└── venv/                        # Virtual environment (auto-created)
+└── logs/                        # 📝 Application logs (auto-generated)
+    └── run_YYYYMMDD_HHMMSS/     # Timestamped log directories
+        └── main.log             # Detailed execution logs
 ```
 
 ## 🚀 How to Use
 
-### For Everyone: Just Double-Click!
-1. **Double-click `START_HERE.command`**
-2. Enter your API key (first time only)
-3. Choose your date range
-4. Get your data!
+### For Everyone: Just Run START_HERE!
+```bash
+./START_HERE
+```
 
-That's it. No terminal knowledge needed. No Python setup required.
+**That's it.** No terminal knowledge needed. No Python setup required.
 
 ### What Happens:
-- ✅ Checks/installs Python automatically
-- ✅ Sets up virtual environment
+- ✅ Checks Python version (3.8+ required)
+- ✅ Creates virtual environment automatically (fallback to system Python)
 - ✅ Installs all dependencies
-- ✅ Saves your API key (one time)
-- ✅ Runs the data pull
-- ✅ Saves with descriptive filename (e.g., `OH_call_ohlcv-1d_20240102_to_20240105.csv`)
-- ✅ Opens the CSV automatically in Excel/Numbers
+- ✅ Prompts for Databento API key (first time only)
+- ✅ Asks for date range
+- ✅ Fetches real market data
+- ✅ Saves with date-based filename (e.g., `HO_options_20211202_to_20220309.csv`)
+- ✅ Shows data preview
 
-### For Developers:
+### Command Line Options:
 ```bash
-# Direct command line usage
-python3 databento_options_puller.py \
-    --start-date 2024-01-01 \
-    --end-date 2024-01-31 \
-    --output my_data.csv
+# Interactive mode
+./START_HERE
+
+# With dates specified
+./START_HERE --start-date 2021-12-02 --end-date 2022-03-09
+
+# Setup only (no data fetch)
+./START_HERE --setup-only
+
+# Help
+./START_HERE --help
 ```
 
 ### 3️⃣ Essential Resources

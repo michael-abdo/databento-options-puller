@@ -449,7 +449,8 @@ class OptionsManager:
             # Oil options: Always output as OH format to match target (even if underlying is HO)
             # Convert HO to OH for display
             display_contract = underlying_contract.replace('HO', 'OH')
-            strike_int = int(round(strike * 100))
+            # Databento format: $3.10 -> C31000 (multiply by 10000)
+            strike_int = int(round(strike * 10000))
             symbol = f"{display_contract} {option_type}{strike_int:05d}"
         elif underlying_contract.startswith('CL'):
             # Crude oil: strike is in dollars × 100 (e.g., 'CLM4 C7500')
