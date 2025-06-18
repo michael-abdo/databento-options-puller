@@ -125,7 +125,7 @@ def setup_components(args):
     # Initialize Databento client
     if args.mock_mode:
         logger.info("Using mock Databento client")
-        databento_client = DatabentoBridge()  # Will use mock mode
+        databento_client = DatabentoBridge(api_key=None)  # Force mock mode
     else:
         api_key = args.api_key or os.getenv('DATABENTO_API_KEY')
         logger.info("Initializing real Databento client")
@@ -135,17 +135,16 @@ def setup_components(args):
     delta_calculator = DeltaCalculator(risk_free_rate=args.risk_free_rate)
     
     # Initialize managers
-    futures_manager = FuturesManager(
-        databento_client=databento_client,
-        underlying='HO'  # NY Harbor ULSD
-    )
+    futures_manager = FuturesManager()
     
     options_manager = OptionsManager(
         databento_client=databento_client,
         futures_manager=futures_manager,
-        delta_calculator=delta_calculator,
-        target_delta=args.target_delta
+        delta_calculator=delta_calculator
     )
+    
+    # Set target delta on options manager
+    options_manager.target_delta = args.target_delta
     
     logger.info(f"Initialized components (target_delta={args.target_delta:.2f}, risk_free_rate={args.risk_free_rate:.2%})")
     
