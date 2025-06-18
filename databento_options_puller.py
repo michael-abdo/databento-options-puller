@@ -313,7 +313,7 @@ def main():
         
         logger = get_logger('main')
         logger.info("Starting Databento Options Data Puller")
-        logger.info(f"Arguments: {vars(args)}")
+        logger.debug(f"Arguments: {vars(args)}")
         
         # Validate arguments
         validate_arguments(args)
@@ -332,12 +332,25 @@ def main():
         print(f"📊 Output: {len(df)} rows, {len(df.columns)} columns")
         print(f"💾 Saved to: {output_path}")
         
+        # Show log location
+        from utils.logging_config import get_current_log_dir
+        log_dir = get_current_log_dir()
+        if log_dir:
+            print(f"📋 Logs saved to: {log_dir}/")
+        
         return 0
         
     except Exception as e:
         logger = get_logger('main')
         logger.error(f"Fatal error: {e}", exc_info=True)
+        
+        # Get log directory for error message
+        from utils.logging_config import get_current_log_dir
+        log_dir = get_current_log_dir()
+        
         print(f"\n❌ Error: {e}")
+        if log_dir:
+            print(f"📋 Check logs at: {log_dir}/main.log")
         return 1
 
 

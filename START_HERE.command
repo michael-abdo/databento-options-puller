@@ -221,7 +221,8 @@ if [ $? -eq 0 ]; then
     esac
 else
     echo ""
-    echo "❌ Error occurred. Check logs/main_*.log for details"
+    echo "❌ Error occurred. Check the logs folder for details"
+    echo "   Logs are organized by run date/time in logs/run_*/"
 fi
 
 echo ""
