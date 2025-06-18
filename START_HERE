@@ -166,14 +166,41 @@ EOF
 
 # Function to validate date format
 validate_date() {
-    if ! date -d "$1" >/dev/null 2>&1; then
+    local input_date="$1"
+    
+    # Check for empty input
+    if [ -z "$input_date" ]; then
         return 1
     fi
-    # Check YYYY-MM-DD format
-    if ! echo "$1" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'; then
+    
+    # Check YYYY-MM-DD format using a simpler approach
+    if echo "$input_date" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'; then
+        # Valid format, now check if it's a real date
+        # Extract year, month, day
+        year=$(echo "$input_date" | cut -d'-' -f1)
+        month=$(echo "$input_date" | cut -d'-' -f2)
+        day=$(echo "$input_date" | cut -d'-' -f3)
+        
+        # Basic range checks
+        if [ "$year" -lt 1900 ] || [ "$year" -gt 2100 ]; then
+            return 1
+        fi
+        if [ "$month" -lt 1 ] || [ "$month" -gt 12 ]; then
+            return 1
+        fi
+        if [ "$day" -lt 1 ] || [ "$day" -gt 31 ]; then
+            return 1
+        fi
+        
+        # Try to validate with date command (macOS compatible)
+        if date -j -f "%Y-%m-%d" "$input_date" >/dev/null 2>&1; then
+            return 0
+        else
+            return 1
+        fi
+    else
         return 1
     fi
-    return 0
 }
 
 # Function to get date input
