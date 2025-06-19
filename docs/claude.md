@@ -4,7 +4,8 @@
 
 ### 1. Input Constraint
 - The input to the system must always be clearly defined and unambiguous.
-- databento API key and web search databento documentation
+- Local JSON file: glbx-mdp3-20100606-20250617.ohlcv-1d.json (OHLCV data for all instruments)
+- This eliminates API dependency and N+1 query timeout issues
 
 ### 2. Output Constraint
 - The output of the system must exactly match the predefined format, with zero deviations.

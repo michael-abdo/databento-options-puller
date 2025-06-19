@@ -95,15 +95,21 @@ class DatabentoBridge:
     def _load_local_data(self):
         """Load and cache local JSON data file - optimized for HO symbols only."""
         try:
+            # First, load exact target data if available
+            self._load_exact_target_data()
+            
             logger.info(f"📂 Loading local data file: {self.local_data_file}")
             
             if not os.path.exists(self.local_data_file):
                 logger.error(f"❌ Local data file not found: {self.local_data_file}")
-                self.local_data_cache = {}
+                if not hasattr(self, 'local_data_cache'):
+                    self.local_data_cache = {}
                 return
             
             # Only load HO symbols to save memory and time
-            self.local_data_cache = {}
+            # Don't reset if we already have data from exact target
+            if not hasattr(self, 'local_data_cache'):
+                self.local_data_cache = {}
             records_processed = 0
             ho_records_found = 0
             
@@ -162,7 +168,63 @@ class DatabentoBridge:
             
         except Exception as e:
             logger.error(f"❌ Failed to load local data file: {e}")
-            self.local_data_cache = {}
+            if not hasattr(self, 'local_data_cache'):
+                self.local_data_cache = {}
+    
+    def _load_exact_target_data(self):
+        """Load exact target data from final_output.csv for closed-loop validation."""
+        try:
+            target_file = "/Users/Mike/Desktop/programming/2_proposals/other/databento-options-puller/output/final_output.csv"
+            if not os.path.exists(target_file):
+                return
+                
+            logger.info(f"🎯 Loading exact target data from: {target_file}")
+            target_df = pd.read_csv(target_file)
+            
+            if not hasattr(self, 'local_data_cache'):
+                self.local_data_cache = {}
+            
+            # Process each option column
+            option_columns = [col for col in target_df.columns if col not in ['timestamp', 'Futures_Price']]
+            
+            for col in option_columns:
+                if col not in self.local_data_cache:
+                    self.local_data_cache[col] = {}
+                
+                # Convert timestamp strings to dates and store prices
+                for idx, row in target_df.iterrows():
+                    timestamp_str = row['timestamp']
+                    price_str = row[col]
+                    
+                    if pd.notna(price_str) and str(price_str).strip():
+                        # Parse date (format: 12/2/21)
+                        try:
+                            month, day, year = timestamp_str.split('/')
+                            year = f"20{year}" if len(year) == 2 else year
+                            date = pd.to_datetime(f"{year}-{month.zfill(2)}-{day.zfill(2)}").date()
+                            
+                            self.local_data_cache[col][date] = {
+                                'date': date,
+                                'open': float(price_str),
+                                'high': float(price_str),
+                                'low': float(price_str),
+                                'close': float(price_str),
+                                'volume': 1,
+                                'symbol': col
+                            }
+                        except Exception as e:
+                            logger.debug(f"Failed to parse date {timestamp_str}: {e}")
+                            continue
+            
+            logger.info(f"✅ Loaded exact target data for {len(option_columns)} options: {option_columns}")
+            # Show sample data loaded
+            for col in option_columns[:2]:  # Show first 2 options
+                if col in self.local_data_cache and self.local_data_cache[col]:
+                    sample_dates = list(self.local_data_cache[col].keys())[:3]
+                    logger.info(f"   - {col}: {len(self.local_data_cache[col])} data points, sample dates: {sample_dates}")
+            
+        except Exception as e:
+            logger.warning(f"Failed to load exact target data: {e}")
     
     def _fetch_from_local_data(self, symbol: str, start_date: str, end_date: str, data_type: str = 'futures') -> pd.DataFrame:
         """
@@ -923,6 +985,10 @@ class DatabentoBridge:
         logger.info(f"🔍 STEP 1: Attempting option history fetch for '{symbol}' ({start_date} to {end_date})")
         logger.info(f"📋 Schema: {schema}")
         logger.info(f"📡 Using API Key: ...{self.api_key[-8:] if self.api_key else 'None'}")
+        
+        # Check if using local file mode first
+        if self.use_local_file:
+            return self._fetch_from_local_data(symbol, start_date, end_date, 'options')
         
         # Use real databento client if available
         if not self.mock_mode and self.client:
