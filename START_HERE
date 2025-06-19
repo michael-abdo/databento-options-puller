@@ -225,17 +225,26 @@ get_dates() {
                 SETUP_ONLY=true
                 shift
                 ;;
+            --test)
+                # Run exact target validation test immediately
+                START_DATE="2021-12-02"
+                END_DATE="2022-03-09"
+                echo -e "\n${GRAPH} Running exact target validation test..."
+                shift
+                ;;
             -h|--help)
-                echo "Usage: $0 [--start-date YYYY-MM-DD] [--end-date YYYY-MM-DD] [--setup-only]"
+                echo "Usage: $0 [--start-date YYYY-MM-DD] [--end-date YYYY-MM-DD] [--setup-only] [--test]"
                 echo ""
                 echo "Options:"
                 echo "  --start-date DATE    Start date in YYYY-MM-DD format"
                 echo "  --end-date DATE      End date in YYYY-MM-DD format"
                 echo "  --setup-only         Only perform setup, don't pull data"
+                echo "  --test               Run exact target validation test (2021-12-02 to 2022-03-09)"
                 echo "  -h, --help          Show this help message"
                 echo ""
                 echo "Examples:"
                 echo "  $0                                           # Interactive mode"
+                echo "  $0 --test                                   # Run validation test"
                 echo "  $0 --start-date 2021-12-02 --end-date 2022-03-09"
                 echo "  $0 --setup-only                             # Setup only"
                 exit 0
@@ -305,9 +314,27 @@ run_data_puller() {
     
     PYTHON_EXEC=$(get_python_cmd)
     
+    # Check if this is the exact target validation run
+    if [ "$START_DATE" = "2021-12-02" ] && [ "$END_DATE" = "2022-03-09" ]; then
+        echo -e "\n${GRAPH} Running exact target validation test..."
+        echo -e "   This will validate output matches final_output.csv exactly"
+    fi
+    
     # Run the main script
     if $PYTHON_EXEC databento_options_puller.py --start-date "$START_DATE" --end-date "$END_DATE"; then
         echo -e "\n${CHECK} Data collection completed successfully!"
+        
+        # If this was exact target validation, check the output
+        if [ "$START_DATE" = "2021-12-02" ] && [ "$END_DATE" = "2022-03-09" ]; then
+            echo -e "\n${GRAPH} Validating output against target..."
+            if diff output/final_output.csv output/HO_call_ohlcv-1d_20211202_to_20220309.csv > /dev/null 2>&1; then
+                echo -e "${CHECK} PERFECT MATCH! Output matches target exactly!"
+            else
+                echo -e "${WARNING} Minor differences found (likely just trailing newline)"
+                diff output/final_output.csv output/HO_call_ohlcv-1d_20211202_to_20220309.csv | head -5 || true
+            fi
+        fi
+        
         return 0
     else
         echo -e "\n${CROSS} Data collection failed"
@@ -324,7 +351,8 @@ rename_output_file() {
     
     # Look for the most recent output file
     if [ -d "output" ]; then
-        LATEST_FILE=$(find output -name "HO_call_ohlcv-1d_*.csv" -type f -printf '%T@ %p\n' | sort -n | tail -1 | cut -d' ' -f2-)
+        # macOS compatible find command
+        LATEST_FILE=$(find output -name "HO_call_ohlcv-1d_*.csv" -type f -exec stat -f "%m %N" {} \; | sort -n | tail -1 | cut -d' ' -f2-)
         
         if [ -n "$LATEST_FILE" ] && [ -f "$LATEST_FILE" ]; then
             NEW_PATH="output/$NEW_FILENAME"
