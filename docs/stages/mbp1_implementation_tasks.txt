@@ -1,0 +1,100 @@
+- MBP-1 Schema Implementation Plan
+  - Phase 1: Schema Configuration (45 min total)
+    - Step 1.1: Add schema parameter to default config
+      - Add databento.schema: "ohlcv-1d" to config/default_params.yaml
+      - Validation: Run python -c "import yaml; print(yaml.safe_load(open('config/default_params.yaml'))['databento']['schema'])"
+      - Expected: Prints "ohlcv-1d"
+    - Step 1.2: Add to production config
+      - Add databento.schema: "ohlcv-1d" to config/production_config.yaml
+      - Validation: Same test as above for production config
+      - Expected: Prints "ohlcv-1d"
+    - Step 1.3: Run existing code unchanged
+      - Test: python databento_options_puller.py --start-date 2021-12-01 --end-date 2021-12-31 --mock-mode --output test_output.csv
+      - Expected: Runs successfully, generates CSV
+      - Validation: Check CSV has expected columns and data
+    - Step 1.4: Create config reader test
+      - Create test_schema_config.py to verify schema is read correctly
+      - Expected: Prints "Schema: ohlcv-1d"
+  - Phase 2: MBP-1 Data Structure Research (30 min)
+    - Step 2.1: Create MBP-1 test fetcher
+      - Create test_mbp1_structure.py to fetch 1 hour of MBP-1 data
+      - Validation: Examine actual MBP-1 data structure
+      - Document: Field names, data types, timestamp format
+    - Step 2.2: Verify tick data contents
+      - Test: Count trades vs quotes in sample data
+      - Validation: Ensure we have actual trade prices for OHLCV
+      - Expected: Both bid/ask quotes and actual trades present
+  - Phase 3: Build Aggregator Module (2 hours)
+    - Step 3.1: Create aggregator skeleton
+      - Create src/aggregators/mbp_to_ohlcv.py with MBPAggregator class
+      - Test: Import module successfully
+      - Validation: python -c "from src.aggregators.mbp_to_ohlcv import MBPAggregator"
+    - Step 3.2: Implement trade extraction
+      - Add extract_trades method to filter for trade records only
+      - Test: Feed sample MBP data, verify trade extraction
+      - Validation: Print first 10 trades, check prices are reasonable
+    - Step 3.3: Implement OHLCV calculation
+      - Add calculate_ohlcv method to group by day and calculate OHLC
+      - Test: Feed known trades, verify OHLCV calculation
+      - Validation: Open = first trade, Close = last trade, High/Low correct, Volume sums correctly
+    - Step 3.4: Add market hours filtering
+      - Filter to include only regular trading hours
+      - Test: Include pre/post market data
+      - Validation: Ensure only 9:30 AM - 4:00 PM ET included
+  - Phase 4: Integrate with databento_client (1.5 hours)
+    - Step 4.1: Add schema property
+      - Add self.schema = config.get('databento.schema', 'ohlcv-1d') to __init__
+      - Test: Create client, check schema property
+      - Validation: client.schema == 'ohlcv-1d'
+    - Step 4.2: Add conditional fetching
+      - Add if/else logic to route mbp-1 through aggregator
+      - Test: Mock mode first, verify routing logic
+      - Validation: Set schema='mbp-1', verify aggregator is called
+    - Step 4.3: Implement MBP-1 fetching
+      - Add _fetch_mbp1_data method
+      - Test: Fetch 1 hour of real MBP-1 data
+      - Validation: Data retrieved, Memory < 100MB, Aggregation produces valid OHLCV
+  - Phase 5: Full Integration Testing (1.5 hours)
+    - Step 5.1: Compare outputs
+      - Create test_compare_schemas.py to fetch same day with both schemas
+      - Test: python test_compare_schemas.py --date 2024-01-02
+      - Validation: OHLCV values should be very close (< 1% difference)
+    - Step 5.2: Test full date range
+      - Test: Run with 1 week of data
+      - Monitor: Memory usage, execution time
+      - Validation: Memory < 1GB, Time < 5 min, Output CSV matches format
+    - Step 5.3: Test error handling
+      - Test Cases: No trades in a day, API timeout, Invalid date range
+      - Validation: Each error handled gracefully
+  - Phase 6: Performance Optimization (1 hour)
+    - Step 6.1: Add chunking
+      - Implement fetch_mbp1_chunked method to fetch day by day
+      - Test: Large date range (1 month)
+      - Validation: Memory usage stays constant
+    - Step 6.2: Add progress bar
+      - Add visual progress indicator
+      - Test: Shows accurate progress
+      - Validation: Progress updates correctly
+    - Step 6.3: Add caching
+      - Implement caching for repeated date ranges
+      - Test: Re-run same date range
+      - Validation: Second run is faster
+  - Phase 7: Documentation (30 min)
+    - Step 7.1: Update README
+      - Add schema option documentation
+      - Include performance comparison table
+      - Add cost warning
+    - Step 7.2: Create migration guide
+      - Document how to switch schemas
+      - Include performance implications
+      - Include cost considerations
+    - Step 7.3: Update config examples
+      - Add schema examples to config files
+      - Validation: New user can follow docs and switch schemas
+  - Final Validation Checklist
+    - Run full test suite with schema='ohlcv-1d'
+    - Run full test suite with schema='mbp-1'
+    - Compare 1 month of output between schemas
+    - Verify memory usage acceptable
+    - Document API cost difference
+    - Create rollback procedure
