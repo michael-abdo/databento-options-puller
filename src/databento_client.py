@@ -139,7 +139,11 @@ class DatabentoBridge:
             if is_trading_day(current_date):
                 for symbol in symbols:
                     # Get base price and add realistic movement
-                    base_price = base_prices.get(symbol, 1.0)
+                    # Handle futures contracts (like HOU3, HOV3, etc.) - all should use OH base price
+                    if symbol.startswith(('HO', 'OH')):
+                        base_price = base_prices.get('OH', 2.50)
+                    else:
+                        base_price = base_prices.get(symbol, 1.0)
                     
                     # Add some realistic price movement
                     days_elapsed = (current_date - start_date).days
@@ -185,19 +189,27 @@ class DatabentoBridge:
         
         symbols = []
         for strike in strikes:
-            # Create option symbol
-            if expiry == '2022-01':
+            # Parse expiry to get year and month
+            try:
+                year_str, month_str = expiry.split('-')
+                year = int(year_str)
+                month = int(month_str)
+                
+                # Month code mapping
+                month_codes = {
+                    1: 'F', 2: 'G', 3: 'H', 4: 'J', 5: 'K', 6: 'M',
+                    7: 'N', 8: 'Q', 9: 'U', 10: 'V', 11: 'X', 12: 'Z'
+                }
+                
+                # Get the month code
+                month_code = month_codes.get(month, 'F')
+                # Get the year code (last digit of year)
+                year_code = str(year)[-1]
+                symbol = f"OH{month_code}{year_code} C{int(strike * 100):05d}"
+                
+            except ValueError:
+                # Fallback for invalid expiry format
                 symbol = f"OHF2 C{int(strike * 100):05d}"
-            elif expiry == '2022-02':
-                symbol = f"OHG2 C{int(strike * 100):05d}"
-            elif expiry == '2022-03':
-                symbol = f"OHH2 C{int(strike * 100):05d}"
-            elif expiry == '2022-04':
-                symbol = f"OHJ2 C{int(strike * 100):05d}"
-            elif expiry == '2022-05':
-                symbol = f"OHK2 C{int(strike * 100):05d}"
-            else:
-                continue
                 
             symbols.append({
                 'symbol': symbol,
@@ -236,40 +248,44 @@ class DatabentoBridge:
         if isinstance(end_date, datetime):
             end_date = end_date.strftime('%Y-%m-%d')
         
-        # Map symbols - use front month contract instead of root
+        # For Databento, we need to determine the actual front month contract
         if root == 'OH' or root == 'HO':
-            # Get front month heating oil contract for the date
-            from datetime import datetime as dt
-            date_obj = dt.strptime(start_date, '%Y-%m-%d')
-            # Use March 2024 contract for early 2024 dates as example
-            if date_obj.year == 2024 and date_obj.month <= 3:
-                symbol = 'HOH4'  # March 2024
-            elif date_obj.year == 2024 and date_obj.month <= 6:
-                symbol = 'HOM4'  # June 2024
-            else:
-                symbol = 'HOZ4'  # December 2024
+            # Use futures manager to get the correct front month contract
+            from src.futures_manager import FuturesManager
+            futures_mgr = FuturesManager()
+            date_obj = datetime.strptime(start_date, '%Y-%m-%d')
+            symbol = futures_mgr.get_front_month_contract(date_obj)
         else:
             symbol = root
         
         if not self.mock_mode and self.client:
             try:
                 # Use official Databento client
+                # FIX 1: Add one day to end_date to avoid same-day error
+                if start_date == end_date:
+                    end_date_fixed = (datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)).strftime('%Y-%m-%d')
+                else:
+                    end_date_fixed = end_date
+                
                 data = self.client.timeseries.get_range(
                     dataset='GLBX.MDP3',
                     schema='ohlcv-1d',
-                    symbols=symbol,
+                    symbols=[symbol],  # FIX 2: Must be list
                     start=start_date,
-                    end=end_date
+                    end=end_date_fixed  # FIX 3: Fixed date range
                 )
                 
                 # Convert to DataFrame
                 df = data.to_df()
                 
-                # Rename columns to match expected format
+                # FIX 4: Proper timestamp and price conversion
                 if 'ts_event' in df.columns:
-                    df['date'] = pd.to_datetime(df['ts_event'])
+                    df['date'] = pd.to_datetime(df['ts_event'])  # Already in nanoseconds
                 elif 'timestamp' in df.columns:
                     df['date'] = pd.to_datetime(df['timestamp'])
+                
+                # NOTE: Prices are already in correct scale, no conversion needed
+                # For OHLCV data, prices are already in dollars (not nanoseconds)
                 
                 # Select required columns
                 expected_cols = ['date', 'open', 'high', 'low', 'close', 'volume']
@@ -317,7 +333,7 @@ class DatabentoBridge:
         Get available options for a specific expiry month.
         
         Args:
-            underlying: Underlying symbol (e.g., 'OH')
+            underlying: Underlying symbol (e.g., 'HO')
             expiry_month: Target expiry (e.g., '2022-01')
             trade_date: Date to get chain for
             
@@ -326,11 +342,52 @@ class DatabentoBridge:
         """
         logger.info(f"Fetching options chain for {underlying} {expiry_month} on {trade_date}")
         
-        # Make symbology request
+        # Convert date to string if needed
+        date_str = trade_date if isinstance(trade_date, str) else trade_date.strftime('%Y-%m-%d')
+        
+        if not self.mock_mode and self.client:
+            try:
+                # Use official Databento client for symbology
+                # FIX 6: Proper symbology API call with stype_in/stype_out
+                # Databento expects HO.OPT format for option parent symbols
+                parent_symbol = f"{underlying}.OPT"
+                data = self.client.symbology.resolve(
+                    dataset='GLBX.MDP3',
+                    symbols=[parent_symbol],  # Parent symbol in correct format
+                    stype_in='parent',     # Input symbol type
+                    stype_out='continuous', # Output symbol type
+                    start_date=date_str,
+                    end_date=date_str
+                )
+                
+                # Convert to expected format
+                options_data = []
+                if hasattr(data, 'to_df'):
+                    df = data.to_df()
+                    # Process symbology results to find options
+                    # This is a simplified version - real implementation would parse expiry/strike
+                    for _, row in df.iterrows():
+                        if 'symbol' in row:
+                            symbol_str = str(row['symbol'])
+                            if 'C' in symbol_str or 'P' in symbol_str:  # Options have C/P
+                                options_data.append({
+                                    'symbol': symbol_str,
+                                    'underlying': underlying,
+                                    'expiry': expiry_month
+                                })
+                
+                logger.info(f"Retrieved {len(options_data)} options from Databento symbology API")
+                return options_data
+                
+            except Exception as e:
+                logger.error(f"Databento symbology API error: {e}")
+                # Fall back to mock mode for this request
+        
+        # Fallback to HTTP request or mock
         params = {
             'underlying': underlying,
             'expiry': expiry_month,
-            'date': trade_date if isinstance(trade_date, str) else trade_date.strftime('%Y-%m-%d')
+            'date': date_str
         }
         
         response = self._make_request('symbology/get_range', params)
@@ -361,7 +418,48 @@ class DatabentoBridge:
         if isinstance(end_date, datetime):
             end_date = end_date.strftime('%Y-%m-%d')
         
-        # Make API request  
+        if not self.mock_mode and self.client:
+            try:
+                # Use official Databento client
+                # FIX 1: Add one day to end_date to avoid same-day error
+                if start_date == end_date:
+                    end_date_fixed = (datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)).strftime('%Y-%m-%d')
+                else:
+                    end_date_fixed = end_date
+                
+                data = self.client.timeseries.get_range(
+                    dataset='GLBX.MDP3',
+                    schema='ohlcv-1d',
+                    symbols=[symbol],  # FIX 2: Must be list
+                    start=start_date,
+                    end=end_date_fixed  # FIX 3: Fixed date range
+                )
+                
+                # Convert to DataFrame
+                df = data.to_df()
+                
+                # FIX 4: Proper timestamp and price conversion
+                if 'ts_event' in df.columns:
+                    df['date'] = pd.to_datetime(df['ts_event'])  # Already in nanoseconds
+                elif 'timestamp' in df.columns:
+                    df['date'] = pd.to_datetime(df['timestamp'])
+                
+                # NOTE: Prices are already in correct scale, no conversion needed
+                # For OHLCV data, prices are already in dollars (not nanoseconds)
+                
+                # Select required columns
+                expected_cols = ['date', 'open', 'high', 'low', 'close', 'volume']
+                available_cols = [col for col in expected_cols if col in df.columns]
+                df = df[available_cols].sort_values('date').reset_index(drop=True)
+                
+                logger.info(f"Retrieved {len(df)} days of option data from Databento")
+                return df
+                
+            except Exception as e:
+                logger.error(f"Databento API error for option {symbol}: {e}")
+                # Fall back to mock mode for this request
+        
+        # Fallback to HTTP request or mock
         params = {
             'dataset': 'GLBX.MDP3',  # CME Globex dataset for futures/options
             'schema': 'ohlcv-1d',

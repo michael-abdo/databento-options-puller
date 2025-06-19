@@ -1,0 +1,360 @@
+[
+  {
+    "test_id": 1,
+    "start_date": "2021-12-01",
+    "end_date": "2022-02-15",
+    "period_days": 76,
+    "success": true,
+    "rows": 52,
+    "total_columns": 4,
+    "option_columns": 3,
+    "option_names": [
+      "HOG2 C00300",
+      "HOH2 C00300",
+      "HOJ2 C00325"
+    ],
+    "file_size": 2068,
+    "stdout": "\u2705 Successfully generated options data!\n\ud83d\udcca Output: 52 rows, 4 columns\n\ud83d\udcbe Saved to: test_60day_01.csv",
+    "stderr": "20:18:58 - delta - INFO - Initialized DeltaCalculator with r=5.00%\n20:18:58 - futures - INFO - Initialized FuturesManager for HO contracts\n20:18:58 - options - INFO - Initialized OptionsManager (target_delta=0.15)\n20:18:58 - options - INFO - Identifying monthly options from 2021-12-01 to 2022-02-15\n20:18:58 - futures - INFO - Generated 3 roll events from 2021-12-01 to 2022-02-15\n20:18:58 - options - INFO - Processing roll date: 2021-12-01\n20:18:58 - futures - INFO - Initialized FuturesManager for HO contracts\n20:18:58 - futures - INFO - Initialized FuturesManager for HO contracts\n20:18:59 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:18:59 - delta - INFO - Selected strike $3.00 with delta 0.1949 (target: 0.15, distance: 0.0449)\n20:18:59 - options - INFO - Selected option: HOG2 C00300 (\u0394=0.1949, K=$3.00)\n20:18:59 - options - INFO - Processing roll date: 2022-01-03\n20:18:59 - futures - INFO - Initialized FuturesManager for HO contracts\n20:18:59 - futures - INFO - Initialized FuturesManager for HO contracts\n20:18:59 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:18:59 - delta - INFO - Selected strike $3.00 with delta 0.1419 (target: 0.15, distance: 0.0081)\n20:18:59 - options - INFO - Selected option: HOH2 C00300 (\u0394=0.1419, K=$3.00)\n20:18:59 - options - INFO - Processing roll date: 2022-02-01\n20:18:59 - futures - INFO - Initialized FuturesManager for HO contracts\n20:18:59 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:00 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:00 - delta - INFO - Selected strike $3.25 with delta 0.1204 (target: 0.15, distance: 0.0296)\n20:19:00 - options - INFO - Selected option: HOJ2 C00325 (\u0394=0.1204, K=$3.25)\n20:19:00 - options - INFO - Identified 3 options for the period"
+  },
+  {
+    "test_id": 2,
+    "start_date": "2021-11-15",
+    "end_date": "2022-01-31",
+    "period_days": 77,
+    "success": true,
+    "rows": 52,
+    "total_columns": 3,
+    "option_columns": 2,
+    "option_names": [
+      "HOG2 C00300",
+      "HOH2 C00300"
+    ],
+    "file_size": 1641,
+    "stdout": "\u2705 Successfully generated options data!\n\ud83d\udcca Output: 52 rows, 3 columns\n\ud83d\udcbe Saved to: test_60day_02.csv",
+    "stderr": "20:19:04 - delta - INFO - Initialized DeltaCalculator with r=5.00%\n20:19:04 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:04 - options - INFO - Initialized OptionsManager (target_delta=0.15)\n20:19:04 - options - INFO - Identifying monthly options from 2021-11-15 to 2022-01-31\n20:19:04 - futures - INFO - Generated 2 roll events from 2021-11-15 to 2022-01-31\n20:19:04 - options - INFO - Processing roll date: 2021-12-01\n20:19:04 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:04 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:04 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:04 - delta - INFO - Selected strike $3.00 with delta 0.2057 (target: 0.15, distance: 0.0557)\n20:19:04 - options - INFO - Selected option: HOG2 C00300 (\u0394=0.2057, K=$3.00)\n20:19:04 - options - INFO - Processing roll date: 2022-01-03\n20:19:04 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:04 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:05 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:05 - delta - INFO - Selected strike $3.00 with delta 0.2029 (target: 0.15, distance: 0.0529)\n20:19:05 - options - INFO - Selected option: HOH2 C00300 (\u0394=0.2029, K=$3.00)\n20:19:05 - options - INFO - Identified 2 options for the period"
+  },
+  {
+    "test_id": 3,
+    "start_date": "2021-10-01",
+    "end_date": "2021-12-15",
+    "period_days": 75,
+    "success": true,
+    "rows": 51,
+    "total_columns": 4,
+    "option_columns": 3,
+    "option_names": [
+      "HOZ1 C00300",
+      "HOF2 C00300",
+      "HOG2 C00325"
+    ],
+    "file_size": 2078,
+    "stdout": "\u2705 Successfully generated options data!\n\ud83d\udcca Output: 51 rows, 4 columns\n\ud83d\udcbe Saved to: test_60day_03.csv",
+    "stderr": "20:19:08 - delta - INFO - Initialized DeltaCalculator with r=5.00%\n20:19:08 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:08 - options - INFO - Initialized OptionsManager (target_delta=0.15)\n20:19:08 - options - INFO - Identifying monthly options from 2021-10-01 to 2021-12-15\n20:19:08 - futures - INFO - Generated 3 roll events from 2021-10-01 to 2021-12-15\n20:19:08 - options - INFO - Processing roll date: 2021-10-01\n20:19:08 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:08 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:09 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:09 - delta - INFO - Selected strike $3.00 with delta 0.1425 (target: 0.15, distance: 0.0075)\n20:19:09 - options - INFO - Selected option: HOZ1 C00300 (\u0394=0.1425, K=$3.00)\n20:19:09 - options - INFO - Processing roll date: 2021-11-01\n20:19:09 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:09 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:09 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:09 - delta - INFO - Selected strike $3.00 with delta 0.1877 (target: 0.15, distance: 0.0377)\n20:19:09 - options - INFO - Selected option: HOF2 C00300 (\u0394=0.1877, K=$3.00)\n20:19:09 - options - INFO - Processing roll date: 2021-12-01\n20:19:09 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:09 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:10 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:10 - delta - INFO - Selected strike $3.25 with delta 0.1520 (target: 0.15, distance: 0.0020)\n20:19:10 - options - INFO - Selected option: HOG2 C00325 (\u0394=0.1520, K=$3.25)\n20:19:10 - options - INFO - Identified 3 options for the period"
+  },
+  {
+    "test_id": 4,
+    "start_date": "2022-03-01",
+    "end_date": "2022-05-15",
+    "period_days": 75,
+    "success": true,
+    "rows": 54,
+    "total_columns": 4,
+    "option_columns": 3,
+    "option_names": [
+      "HOK2 C00325",
+      "HOM2 C00325",
+      "HON2 C00325"
+    ],
+    "file_size": 2108,
+    "stdout": "\u2705 Successfully generated options data!\n\ud83d\udcca Output: 54 rows, 4 columns\n\ud83d\udcbe Saved to: test_60day_04.csv",
+    "stderr": "20:19:14 - delta - INFO - Initialized DeltaCalculator with r=5.00%\n20:19:14 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:14 - options - INFO - Initialized OptionsManager (target_delta=0.15)\n20:19:14 - options - INFO - Identifying monthly options from 2022-03-01 to 2022-05-15\n20:19:14 - futures - INFO - Generated 3 roll events from 2022-03-01 to 2022-05-15\n20:19:14 - options - INFO - Processing roll date: 2022-03-01\n20:19:14 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:14 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:15 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:15 - delta - INFO - Selected strike $3.25 with delta 0.1746 (target: 0.15, distance: 0.0246)\n20:19:15 - options - INFO - Selected option: HOK2 C00325 (\u0394=0.1746, K=$3.25)\n20:19:15 - options - INFO - Processing roll date: 2022-04-01\n20:19:15 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:15 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:15 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:15 - delta - INFO - Selected strike $3.25 with delta 0.1555 (target: 0.15, distance: 0.0055)\n20:19:15 - options - INFO - Selected option: HOM2 C00325 (\u0394=0.1555, K=$3.25)\n20:19:15 - options - INFO - Processing roll date: 2022-05-02\n20:19:15 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:15 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:16 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:16 - delta - INFO - Selected strike $3.25 with delta 0.1216 (target: 0.15, distance: 0.0284)\n20:19:16 - options - INFO - Selected option: HON2 C00325 (\u0394=0.1216, K=$3.25)\n20:19:16 - options - INFO - Identified 3 options for the period"
+  },
+  {
+    "test_id": 5,
+    "start_date": "2022-04-15",
+    "end_date": "2022-07-01",
+    "period_days": 77,
+    "success": true,
+    "rows": 54,
+    "total_columns": 4,
+    "option_columns": 3,
+    "option_names": [
+      "HON2 C00300",
+      "HOQ2 C00300",
+      "HOU2 C00325"
+    ],
+    "file_size": 1759,
+    "stdout": "\u2705 Successfully generated options data!\n\ud83d\udcca Output: 54 rows, 4 columns\n\ud83d\udcbe Saved to: test_60day_05.csv",
+    "stderr": "20:19:20 - delta - INFO - Initialized DeltaCalculator with r=5.00%\n20:19:20 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:20 - options - INFO - Initialized OptionsManager (target_delta=0.15)\n20:19:20 - options - INFO - Identifying monthly options from 2022-04-15 to 2022-07-01\n20:19:20 - futures - INFO - Generated 3 roll events from 2022-04-15 to 2022-07-01\n20:19:20 - options - INFO - Processing roll date: 2022-05-02\n20:19:20 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:20 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:20 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:20 - delta - INFO - Selected strike $3.00 with delta 0.1569 (target: 0.15, distance: 0.0069)\n20:19:20 - options - INFO - Selected option: HON2 C00300 (\u0394=0.1569, K=$3.00)\n20:19:20 - options - INFO - Processing roll date: 2022-06-01\n20:19:20 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:20 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:21 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:21 - delta - INFO - Selected strike $3.00 with delta 0.1519 (target: 0.15, distance: 0.0019)\n20:19:21 - options - INFO - Selected option: HOQ2 C00300 (\u0394=0.1519, K=$3.00)\n20:19:21 - options - INFO - Processing roll date: 2022-07-01\n20:19:21 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:21 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:22 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:22 - delta - INFO - Selected strike $3.25 with delta 0.1119 (target: 0.15, distance: 0.0381)\n20:19:22 - options - INFO - Selected option: HOU2 C00325 (\u0394=0.1119, K=$3.25)\n20:19:22 - options - INFO - Identified 3 options for the period"
+  },
+  {
+    "test_id": 6,
+    "start_date": "2022-02-15",
+    "end_date": "2022-04-30",
+    "period_days": 74,
+    "success": true,
+    "rows": 53,
+    "total_columns": 3,
+    "option_columns": 2,
+    "option_names": [
+      "HOK2 C00325",
+      "HOM2 C00300"
+    ],
+    "file_size": 1690,
+    "stdout": "\u2705 Successfully generated options data!\n\ud83d\udcca Output: 53 rows, 3 columns\n\ud83d\udcbe Saved to: test_60day_06.csv",
+    "stderr": "20:19:26 - delta - INFO - Initialized DeltaCalculator with r=5.00%\n20:19:26 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:26 - options - INFO - Initialized OptionsManager (target_delta=0.15)\n20:19:26 - options - INFO - Identifying monthly options from 2022-02-15 to 2022-04-30\n20:19:26 - futures - INFO - Generated 2 roll events from 2022-02-15 to 2022-04-30\n20:19:26 - options - INFO - Processing roll date: 2022-03-01\n20:19:26 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:26 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:26 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:26 - delta - INFO - Selected strike $3.25 with delta 0.1386 (target: 0.15, distance: 0.0114)\n20:19:26 - options - INFO - Selected option: HOK2 C00325 (\u0394=0.1386, K=$3.25)\n20:19:26 - options - INFO - Processing roll date: 2022-04-01\n20:19:26 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:26 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:27 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:27 - delta - INFO - Selected strike $3.00 with delta 0.1254 (target: 0.15, distance: 0.0246)\n20:19:27 - options - INFO - Selected option: HOM2 C00300 (\u0394=0.1254, K=$3.00)\n20:19:27 - options - INFO - Identified 2 options for the period"
+  },
+  {
+    "test_id": 7,
+    "start_date": "2022-06-01",
+    "end_date": "2022-08-15",
+    "period_days": 75,
+    "success": true,
+    "rows": 52,
+    "total_columns": 4,
+    "option_columns": 3,
+    "option_names": [
+      "HOQ2 C00325",
+      "HOU2 C00300",
+      "HOV2 C00350"
+    ],
+    "file_size": 2045,
+    "stdout": "\u2705 Successfully generated options data!\n\ud83d\udcca Output: 52 rows, 4 columns\n\ud83d\udcbe Saved to: test_60day_07.csv",
+    "stderr": "20:19:30 - delta - INFO - Initialized DeltaCalculator with r=5.00%\n20:19:30 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:30 - options - INFO - Initialized OptionsManager (target_delta=0.15)\n20:19:30 - options - INFO - Identifying monthly options from 2022-06-01 to 2022-08-15\n20:19:30 - futures - INFO - Generated 3 roll events from 2022-06-01 to 2022-08-15\n20:19:30 - options - INFO - Processing roll date: 2022-06-01\n20:19:30 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:30 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:31 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:31 - delta - INFO - Selected strike $3.25 with delta 0.1073 (target: 0.15, distance: 0.0427)\n20:19:31 - options - INFO - Selected option: HOQ2 C00325 (\u0394=0.1073, K=$3.25)\n20:19:31 - options - INFO - Processing roll date: 2022-07-01\n20:19:31 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:31 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:31 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:31 - delta - INFO - Selected strike $3.00 with delta 0.1841 (target: 0.15, distance: 0.0341)\n20:19:31 - options - INFO - Selected option: HOU2 C00300 (\u0394=0.1841, K=$3.00)\n20:19:31 - options - INFO - Processing roll date: 2022-08-01\n20:19:31 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:31 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:32 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:32 - delta - INFO - Selected strike $3.50 with delta 0.1247 (target: 0.15, distance: 0.0253)\n20:19:32 - options - INFO - Selected option: HOV2 C00350 (\u0394=0.1247, K=$3.50)\n20:19:32 - options - INFO - Identified 3 options for the period"
+  },
+  {
+    "test_id": 8,
+    "start_date": "2022-07-15",
+    "end_date": "2022-10-01",
+    "period_days": 78,
+    "success": true,
+    "rows": 55,
+    "total_columns": 3,
+    "option_columns": 2,
+    "option_names": [
+      "HOV2 C00300",
+      "HOX2 C00325"
+    ],
+    "file_size": 1717,
+    "stdout": "\u2705 Successfully generated options data!\n\ud83d\udcca Output: 55 rows, 3 columns\n\ud83d\udcbe Saved to: test_60day_08.csv",
+    "stderr": "20:19:36 - delta - INFO - Initialized DeltaCalculator with r=5.00%\n20:19:36 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:36 - options - INFO - Initialized OptionsManager (target_delta=0.15)\n20:19:36 - options - INFO - Identifying monthly options from 2022-07-15 to 2022-10-01\n20:19:36 - futures - INFO - Generated 2 roll events from 2022-07-15 to 2022-10-01\n20:19:36 - options - INFO - Processing roll date: 2022-08-01\n20:19:36 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:36 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:36 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:36 - delta - INFO - Selected strike $3.00 with delta 0.0885 (target: 0.15, distance: 0.0615)\n20:19:36 - options - INFO - Selected option: HOV2 C00300 (\u0394=0.0885, K=$3.00)\n20:19:36 - options - INFO - Processing roll date: 2022-09-01\n20:19:36 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:36 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:37 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:37 - delta - INFO - Selected strike $3.25 with delta 0.1657 (target: 0.15, distance: 0.0157)\n20:19:37 - options - INFO - Selected option: HOX2 C00325 (\u0394=0.1657, K=$3.25)\n20:19:37 - options - INFO - Identified 2 options for the period"
+  },
+  {
+    "test_id": 9,
+    "start_date": "2022-05-01",
+    "end_date": "2022-07-15",
+    "period_days": 75,
+    "success": true,
+    "rows": 52,
+    "total_columns": 4,
+    "option_columns": 3,
+    "option_names": [
+      "HON2 C00325",
+      "HOQ2 C00325",
+      "HOU2 C00300"
+    ],
+    "file_size": 2045,
+    "stdout": "\u2705 Successfully generated options data!\n\ud83d\udcca Output: 52 rows, 4 columns\n\ud83d\udcbe Saved to: test_60day_09.csv",
+    "stderr": "20:19:40 - delta - INFO - Initialized DeltaCalculator with r=5.00%\n20:19:40 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:40 - options - INFO - Initialized OptionsManager (target_delta=0.15)\n20:19:40 - options - INFO - Identifying monthly options from 2022-05-01 to 2022-07-15\n20:19:40 - futures - INFO - Generated 3 roll events from 2022-05-01 to 2022-07-15\n20:19:40 - options - INFO - Processing roll date: 2022-05-02\n20:19:40 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:40 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:41 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:41 - delta - INFO - Selected strike $3.25 with delta 0.1200 (target: 0.15, distance: 0.0300)\n20:19:41 - options - INFO - Selected option: HON2 C00325 (\u0394=0.1200, K=$3.25)\n20:19:41 - options - INFO - Processing roll date: 2022-06-01\n20:19:41 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:41 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:41 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:41 - delta - INFO - Selected strike $3.25 with delta 0.1372 (target: 0.15, distance: 0.0128)\n20:19:41 - options - INFO - Selected option: HOQ2 C00325 (\u0394=0.1372, K=$3.25)\n20:19:41 - options - INFO - Processing roll date: 2022-07-01\n20:19:41 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:41 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:42 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:42 - delta - INFO - Selected strike $3.00 with delta 0.1440 (target: 0.15, distance: 0.0060)\n20:19:42 - options - INFO - Selected option: HOU2 C00300 (\u0394=0.1440, K=$3.00)\n20:19:42 - options - INFO - Identified 3 options for the period"
+  },
+  {
+    "test_id": 10,
+    "start_date": "2022-09-01",
+    "end_date": "2022-11-15",
+    "period_days": 75,
+    "success": true,
+    "rows": 51,
+    "total_columns": 4,
+    "option_columns": 3,
+    "option_names": [
+      "HOX2 C00300",
+      "HOZ2 C00300",
+      "HOF3 C00300"
+    ],
+    "file_size": 2033,
+    "stdout": "\u2705 Successfully generated options data!\n\ud83d\udcca Output: 51 rows, 4 columns\n\ud83d\udcbe Saved to: test_60day_10.csv",
+    "stderr": "20:19:46 - delta - INFO - Initialized DeltaCalculator with r=5.00%\n20:19:46 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:46 - options - INFO - Initialized OptionsManager (target_delta=0.15)\n20:19:46 - options - INFO - Identifying monthly options from 2022-09-01 to 2022-11-15\n20:19:46 - futures - INFO - Generated 3 roll events from 2022-09-01 to 2022-11-15\n20:19:46 - options - INFO - Processing roll date: 2022-09-01\n20:19:46 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:46 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:46 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:46 - delta - INFO - Selected strike $3.00 with delta 0.1351 (target: 0.15, distance: 0.0149)\n20:19:47 - options - INFO - Selected option: HOX2 C00300 (\u0394=0.1351, K=$3.00)\n20:19:47 - options - INFO - Processing roll date: 2022-10-03\n20:19:47 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:47 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:47 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:47 - delta - INFO - Selected strike $3.00 with delta 0.1599 (target: 0.15, distance: 0.0099)\n20:19:47 - options - INFO - Selected option: HOZ2 C00300 (\u0394=0.1599, K=$3.00)\n20:19:47 - options - INFO - Processing roll date: 2022-11-01\n20:19:47 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:47 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:48 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:48 - delta - INFO - Selected strike $3.00 with delta 0.1977 (target: 0.15, distance: 0.0477)\n20:19:48 - options - INFO - Selected option: HOF3 C00300 (\u0394=0.1977, K=$3.00)\n20:19:48 - options - INFO - Identified 3 options for the period"
+  },
+  {
+    "test_id": 11,
+    "start_date": "2022-10-15",
+    "end_date": "2023-01-01",
+    "period_days": 78,
+    "success": true,
+    "rows": 52,
+    "total_columns": 3,
+    "option_columns": 2,
+    "option_names": [
+      "HOF3 C00325",
+      "HOG3 C00300"
+    ],
+    "file_size": 1676,
+    "stdout": "\u2705 Successfully generated options data!\n\ud83d\udcca Output: 52 rows, 3 columns\n\ud83d\udcbe Saved to: test_60day_11.csv",
+    "stderr": "20:19:52 - delta - INFO - Initialized DeltaCalculator with r=5.00%\n20:19:52 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:52 - options - INFO - Initialized OptionsManager (target_delta=0.15)\n20:19:52 - options - INFO - Identifying monthly options from 2022-10-15 to 2023-01-01\n20:19:52 - futures - INFO - Generated 2 roll events from 2022-10-15 to 2023-01-01\n20:19:52 - options - INFO - Processing roll date: 2022-11-01\n20:19:52 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:52 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:52 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:52 - delta - INFO - Selected strike $3.25 with delta 0.1632 (target: 0.15, distance: 0.0132)\n20:19:52 - options - INFO - Selected option: HOF3 C00325 (\u0394=0.1632, K=$3.25)\n20:19:52 - options - INFO - Processing roll date: 2022-12-01\n20:19:52 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:52 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:53 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:53 - delta - INFO - Selected strike $3.00 with delta 0.1659 (target: 0.15, distance: 0.0159)\n20:19:53 - options - INFO - Selected option: HOG3 C00300 (\u0394=0.1659, K=$3.00)\n20:19:53 - options - INFO - Identified 2 options for the period"
+  },
+  {
+    "test_id": 12,
+    "start_date": "2022-08-15",
+    "end_date": "2022-11-01",
+    "period_days": 78,
+    "success": true,
+    "rows": 55,
+    "total_columns": 4,
+    "option_columns": 3,
+    "option_names": [
+      "HOX2 C00300",
+      "HOZ2 C00325",
+      "HOF3 C00325"
+    ],
+    "file_size": 1755,
+    "stdout": "\u2705 Successfully generated options data!\n\ud83d\udcca Output: 55 rows, 4 columns\n\ud83d\udcbe Saved to: test_60day_12.csv",
+    "stderr": "20:19:56 - delta - INFO - Initialized DeltaCalculator with r=5.00%\n20:19:56 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:56 - options - INFO - Initialized OptionsManager (target_delta=0.15)\n20:19:56 - options - INFO - Identifying monthly options from 2022-08-15 to 2022-11-01\n20:19:56 - futures - INFO - Generated 3 roll events from 2022-08-15 to 2022-11-01\n20:19:56 - options - INFO - Processing roll date: 2022-09-01\n20:19:56 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:56 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:57 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:57 - delta - INFO - Selected strike $3.00 with delta 0.1566 (target: 0.15, distance: 0.0066)\n20:19:57 - options - INFO - Selected option: HOX2 C00300 (\u0394=0.1566, K=$3.00)\n20:19:57 - options - INFO - Processing roll date: 2022-10-03\n20:19:57 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:57 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:57 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:57 - delta - INFO - Selected strike $3.25 with delta 0.1114 (target: 0.15, distance: 0.0386)\n20:19:57 - options - INFO - Selected option: HOZ2 C00325 (\u0394=0.1114, K=$3.25)\n20:19:57 - options - INFO - Processing roll date: 2022-11-01\n20:19:57 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:57 - futures - INFO - Initialized FuturesManager for HO contracts\n20:19:58 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:19:58 - delta - INFO - Selected strike $3.25 with delta 0.1057 (target: 0.15, distance: 0.0443)\n20:19:58 - options - INFO - Selected option: HOF3 C00325 (\u0394=0.1057, K=$3.25)\n20:19:58 - options - INFO - Identified 3 options for the period"
+  },
+  {
+    "test_id": 13,
+    "start_date": "2023-01-15",
+    "end_date": "2023-04-01",
+    "period_days": 76,
+    "success": true,
+    "rows": 53,
+    "total_columns": 3,
+    "option_columns": 2,
+    "option_names": [
+      "HOJ3 C00300",
+      "HOK3 C00300"
+    ],
+    "file_size": 1685,
+    "stdout": "\u2705 Successfully generated options data!\n\ud83d\udcca Output: 53 rows, 3 columns\n\ud83d\udcbe Saved to: test_60day_13.csv",
+    "stderr": "20:20:02 - delta - INFO - Initialized DeltaCalculator with r=5.00%\n20:20:02 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:02 - options - INFO - Initialized OptionsManager (target_delta=0.15)\n20:20:02 - options - INFO - Identifying monthly options from 2023-01-15 to 2023-04-01\n20:20:02 - futures - INFO - Generated 2 roll events from 2023-01-15 to 2023-04-01\n20:20:02 - options - INFO - Processing roll date: 2023-02-01\n20:20:02 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:02 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:03 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:03 - delta - INFO - Selected strike $3.00 with delta 0.1249 (target: 0.15, distance: 0.0251)\n20:20:03 - options - INFO - Selected option: HOJ3 C00300 (\u0394=0.1249, K=$3.00)\n20:20:03 - options - INFO - Processing roll date: 2023-03-01\n20:20:03 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:03 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:03 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:03 - delta - INFO - Selected strike $3.00 with delta 0.1524 (target: 0.15, distance: 0.0024)\n20:20:03 - options - INFO - Selected option: HOK3 C00300 (\u0394=0.1524, K=$3.00)\n20:20:03 - options - INFO - Identified 2 options for the period"
+  },
+  {
+    "test_id": 14,
+    "start_date": "2023-03-01",
+    "end_date": "2023-05-15",
+    "period_days": 75,
+    "success": true,
+    "rows": 54,
+    "total_columns": 4,
+    "option_columns": 3,
+    "option_names": [
+      "HOK3 C00300",
+      "HOM3 C00300",
+      "HON3 C00325"
+    ],
+    "file_size": 2106,
+    "stdout": "\u2705 Successfully generated options data!\n\ud83d\udcca Output: 54 rows, 4 columns\n\ud83d\udcbe Saved to: test_60day_14.csv",
+    "stderr": "20:20:07 - delta - INFO - Initialized DeltaCalculator with r=5.00%\n20:20:07 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:07 - options - INFO - Initialized OptionsManager (target_delta=0.15)\n20:20:07 - options - INFO - Identifying monthly options from 2023-03-01 to 2023-05-15\n20:20:07 - futures - INFO - Generated 3 roll events from 2023-03-01 to 2023-05-15\n20:20:07 - options - INFO - Processing roll date: 2023-03-01\n20:20:07 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:07 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:07 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:07 - delta - INFO - Selected strike $3.00 with delta 0.1749 (target: 0.15, distance: 0.0249)\n20:20:07 - options - INFO - Selected option: HOK3 C00300 (\u0394=0.1749, K=$3.00)\n20:20:07 - options - INFO - Processing roll date: 2023-04-03\n20:20:07 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:07 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:08 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:08 - delta - INFO - Selected strike $3.00 with delta 0.0865 (target: 0.15, distance: 0.0635)\n20:20:08 - options - INFO - Selected option: HOM3 C00300 (\u0394=0.0865, K=$3.00)\n20:20:08 - options - INFO - Processing roll date: 2023-05-01\n20:20:08 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:08 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:08 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:08 - delta - INFO - Selected strike $3.25 with delta 0.1026 (target: 0.15, distance: 0.0474)\n20:20:08 - options - INFO - Selected option: HON3 C00325 (\u0394=0.1026, K=$3.25)\n20:20:08 - options - INFO - Identified 3 options for the period"
+  },
+  {
+    "test_id": 15,
+    "start_date": "2023-05-01",
+    "end_date": "2023-07-15",
+    "period_days": 75,
+    "success": true,
+    "rows": 52,
+    "total_columns": 4,
+    "option_columns": 3,
+    "option_names": [
+      "HON3 C00325",
+      "HOQ3 C00300",
+      "HOU3 C00300"
+    ],
+    "file_size": 2019,
+    "stdout": "\u2705 Successfully generated options data!\n\ud83d\udcca Output: 52 rows, 4 columns\n\ud83d\udcbe Saved to: test_60day_15.csv",
+    "stderr": "20:20:12 - delta - INFO - Initialized DeltaCalculator with r=5.00%\n20:20:12 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:12 - options - INFO - Initialized OptionsManager (target_delta=0.15)\n20:20:12 - options - INFO - Identifying monthly options from 2023-05-01 to 2023-07-15\n20:20:12 - futures - INFO - Generated 3 roll events from 2023-05-01 to 2023-07-15\n20:20:12 - options - INFO - Processing roll date: 2023-05-01\n20:20:12 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:12 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:13 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:13 - delta - INFO - Selected strike $3.25 with delta 0.1241 (target: 0.15, distance: 0.0259)\n20:20:13 - options - INFO - Selected option: HON3 C00325 (\u0394=0.1241, K=$3.25)\n20:20:13 - options - INFO - Processing roll date: 2023-06-01\n20:20:13 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:13 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:13 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:13 - delta - INFO - Selected strike $3.00 with delta 0.1772 (target: 0.15, distance: 0.0272)\n20:20:14 - options - INFO - Selected option: HOQ3 C00300 (\u0394=0.1772, K=$3.00)\n20:20:14 - options - INFO - Processing roll date: 2023-07-03\n20:20:14 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:14 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:14 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:14 - delta - INFO - Selected strike $3.00 with delta 0.1927 (target: 0.15, distance: 0.0427)\n20:20:14 - options - INFO - Selected option: HOU3 C00300 (\u0394=0.1927, K=$3.00)\n20:20:14 - options - INFO - Identified 3 options for the period"
+  },
+  {
+    "test_id": 16,
+    "start_date": "2023-07-01",
+    "end_date": "2023-09-15",
+    "period_days": 76,
+    "success": true,
+    "rows": 53,
+    "total_columns": 4,
+    "option_columns": 3,
+    "option_names": [
+      "HOU3 C00325",
+      "HOV3 C00325",
+      "HOX3 C00325"
+    ],
+    "file_size": 2115,
+    "stdout": "\u2705 Successfully generated options data!\n\ud83d\udcca Output: 53 rows, 4 columns\n\ud83d\udcbe Saved to: test_60day_16.csv",
+    "stderr": "20:20:18 - delta - INFO - Initialized DeltaCalculator with r=5.00%\n20:20:18 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:18 - options - INFO - Initialized OptionsManager (target_delta=0.15)\n20:20:18 - options - INFO - Identifying monthly options from 2023-07-01 to 2023-09-15\n20:20:18 - futures - INFO - Generated 3 roll events from 2023-07-01 to 2023-09-15\n20:20:18 - options - INFO - Processing roll date: 2023-07-03\n20:20:18 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:18 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:19 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:19 - delta - INFO - Selected strike $3.25 with delta 0.1376 (target: 0.15, distance: 0.0124)\n20:20:19 - options - INFO - Selected option: HOU3 C00325 (\u0394=0.1376, K=$3.25)\n20:20:19 - options - INFO - Processing roll date: 2023-08-01\n20:20:19 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:19 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:19 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:19 - delta - INFO - Selected strike $3.25 with delta 0.1367 (target: 0.15, distance: 0.0133)\n20:20:19 - options - INFO - Selected option: HOV3 C00325 (\u0394=0.1367, K=$3.25)\n20:20:19 - options - INFO - Processing roll date: 2023-09-01\n20:20:19 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:20 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:20 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:20 - delta - INFO - Selected strike $3.25 with delta 0.1412 (target: 0.15, distance: 0.0088)\n20:20:20 - options - INFO - Selected option: HOX3 C00325 (\u0394=0.1412, K=$3.25)\n20:20:20 - options - INFO - Identified 3 options for the period"
+  },
+  {
+    "test_id": 17,
+    "start_date": "2023-09-01",
+    "end_date": "2023-11-15",
+    "period_days": 75,
+    "success": true,
+    "rows": 51,
+    "total_columns": 4,
+    "option_columns": 3,
+    "option_names": [
+      "HOX3 C00300",
+      "HOZ3 C00325",
+      "HOF4 C00300"
+    ],
+    "file_size": 2057,
+    "stdout": "\u2705 Successfully generated options data!\n\ud83d\udcca Output: 51 rows, 4 columns\n\ud83d\udcbe Saved to: test_60day_17.csv",
+    "stderr": "20:20:24 - delta - INFO - Initialized DeltaCalculator with r=5.00%\n20:20:24 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:24 - options - INFO - Initialized OptionsManager (target_delta=0.15)\n20:20:24 - options - INFO - Identifying monthly options from 2023-09-01 to 2023-11-15\n20:20:24 - futures - INFO - Generated 3 roll events from 2023-09-01 to 2023-11-15\n20:20:24 - options - INFO - Processing roll date: 2023-09-01\n20:20:24 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:24 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:25 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:25 - delta - INFO - Selected strike $3.00 with delta 0.1471 (target: 0.15, distance: 0.0029)\n20:20:25 - options - INFO - Selected option: HOX3 C00300 (\u0394=0.1471, K=$3.00)\n20:20:25 - options - INFO - Processing roll date: 2023-10-02\n20:20:25 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:25 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:25 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:25 - delta - INFO - Selected strike $3.25 with delta 0.1428 (target: 0.15, distance: 0.0072)\n20:20:25 - options - INFO - Selected option: HOZ3 C00325 (\u0394=0.1428, K=$3.25)\n20:20:25 - options - INFO - Processing roll date: 2023-11-01\n20:20:25 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:25 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:26 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:26 - delta - INFO - Selected strike $3.00 with delta 0.1636 (target: 0.15, distance: 0.0136)\n20:20:26 - options - INFO - Selected option: HOF4 C00300 (\u0394=0.1636, K=$3.00)\n20:20:26 - options - INFO - Identified 3 options for the period"
+  },
+  {
+    "test_id": 18,
+    "start_date": "2022-01-01",
+    "end_date": "2022-04-15",
+    "period_days": 104,
+    "success": true,
+    "rows": 73,
+    "total_columns": 5,
+    "option_columns": 4,
+    "option_names": [
+      "HOH2 C00325",
+      "HOJ2 C00300",
+      "HOK2 C00300",
+      "HOM2 C00300"
+    ],
+    "file_size": 3118,
+    "stdout": "\u2705 Successfully generated options data!\n\ud83d\udcca Output: 73 rows, 5 columns\n\ud83d\udcbe Saved to: test_60day_18.csv",
+    "stderr": "20:20:30 - delta - INFO - Initialized DeltaCalculator with r=5.00%\n20:20:30 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:30 - options - INFO - Initialized OptionsManager (target_delta=0.15)\n20:20:30 - options - INFO - Identifying monthly options from 2022-01-01 to 2022-04-15\n20:20:30 - futures - INFO - Generated 4 roll events from 2022-01-01 to 2022-04-15\n20:20:30 - options - INFO - Processing roll date: 2022-01-03\n20:20:30 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:30 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:30 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:30 - delta - INFO - Selected strike $3.25 with delta 0.1208 (target: 0.15, distance: 0.0292)\n20:20:30 - options - INFO - Selected option: HOH2 C00325 (\u0394=0.1208, K=$3.25)\n20:20:30 - options - INFO - Processing roll date: 2022-02-01\n20:20:30 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:30 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:31 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:31 - delta - INFO - Selected strike $3.00 with delta 0.1381 (target: 0.15, distance: 0.0119)\n20:20:31 - options - INFO - Selected option: HOJ2 C00300 (\u0394=0.1381, K=$3.00)\n20:20:31 - options - INFO - Processing roll date: 2022-03-01\n20:20:31 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:31 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:31 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:31 - delta - INFO - Selected strike $3.00 with delta 0.1598 (target: 0.15, distance: 0.0098)\n20:20:31 - options - INFO - Selected option: HOK2 C00300 (\u0394=0.1598, K=$3.00)\n20:20:31 - options - INFO - Processing roll date: 2022-04-01\n20:20:31 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:31 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:32 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:32 - delta - INFO - Selected strike $3.00 with delta 0.1704 (target: 0.15, distance: 0.0204)\n20:20:32 - options - INFO - Selected option: HOM2 C00300 (\u0394=0.1704, K=$3.00)\n20:20:32 - options - INFO - Identified 4 options for the period"
+  },
+  {
+    "test_id": 19,
+    "start_date": "2022-06-15",
+    "end_date": "2022-10-01",
+    "period_days": 108,
+    "success": true,
+    "rows": 75,
+    "total_columns": 4,
+    "option_columns": 3,
+    "option_names": [
+      "HOU2 C00300",
+      "HOV2 C00300",
+      "HOX2 C00300"
+    ],
+    "file_size": 2758,
+    "stdout": "\u2705 Successfully generated options data!\n\ud83d\udcca Output: 75 rows, 4 columns\n\ud83d\udcbe Saved to: test_60day_19.csv",
+    "stderr": "20:20:37 - delta - INFO - Initialized DeltaCalculator with r=5.00%\n20:20:37 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:37 - options - INFO - Initialized OptionsManager (target_delta=0.15)\n20:20:37 - options - INFO - Identifying monthly options from 2022-06-15 to 2022-10-01\n20:20:37 - futures - INFO - Generated 3 roll events from 2022-06-15 to 2022-10-01\n20:20:37 - options - INFO - Processing roll date: 2022-07-01\n20:20:37 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:37 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:37 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:37 - delta - INFO - Selected strike $3.00 with delta 0.1972 (target: 0.15, distance: 0.0472)\n20:20:37 - options - INFO - Selected option: HOU2 C00300 (\u0394=0.1972, K=$3.00)\n20:20:37 - options - INFO - Processing roll date: 2022-08-01\n20:20:37 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:37 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:38 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:38 - delta - INFO - Selected strike $3.00 with delta 0.1847 (target: 0.15, distance: 0.0347)\n20:20:38 - options - INFO - Selected option: HOV2 C00300 (\u0394=0.1847, K=$3.00)\n20:20:38 - options - INFO - Processing roll date: 2022-09-01\n20:20:38 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:38 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:38 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:38 - delta - INFO - Selected strike $3.00 with delta 0.1696 (target: 0.15, distance: 0.0196)\n20:20:38 - options - INFO - Selected option: HOX2 C00300 (\u0394=0.1696, K=$3.00)\n20:20:38 - options - INFO - Identified 3 options for the period"
+  },
+  {
+    "test_id": 20,
+    "start_date": "2023-02-01",
+    "end_date": "2023-06-01",
+    "period_days": 120,
+    "success": true,
+    "rows": 85,
+    "total_columns": 6,
+    "option_columns": 5,
+    "option_names": [
+      "HOJ3 C00300",
+      "HOK3 C00350",
+      "HOM3 C00300",
+      "HON3 C00325",
+      "HOQ3 C00300"
+    ],
+    "file_size": 3794,
+    "stdout": "\u2705 Successfully generated options data!\n\ud83d\udcca Output: 85 rows, 6 columns\n\ud83d\udcbe Saved to: test_60day_20.csv",
+    "stderr": "20:20:42 - delta - INFO - Initialized DeltaCalculator with r=5.00%\n20:20:42 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:42 - options - INFO - Initialized OptionsManager (target_delta=0.15)\n20:20:42 - options - INFO - Identifying monthly options from 2023-02-01 to 2023-06-01\n20:20:43 - futures - INFO - Generated 5 roll events from 2023-02-01 to 2023-06-01\n20:20:43 - options - INFO - Processing roll date: 2023-02-01\n20:20:43 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:43 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:43 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:43 - delta - INFO - Selected strike $3.00 with delta 0.1406 (target: 0.15, distance: 0.0094)\n20:20:43 - options - INFO - Selected option: HOJ3 C00300 (\u0394=0.1406, K=$3.00)\n20:20:43 - options - INFO - Processing roll date: 2023-03-01\n20:20:43 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:43 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:44 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:44 - delta - INFO - Selected strike $3.50 with delta 0.1247 (target: 0.15, distance: 0.0253)\n20:20:44 - options - INFO - Selected option: HOK3 C00350 (\u0394=0.1247, K=$3.50)\n20:20:44 - options - INFO - Processing roll date: 2023-04-03\n20:20:44 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:44 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:44 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:44 - delta - INFO - Selected strike $3.00 with delta 0.1529 (target: 0.15, distance: 0.0029)\n20:20:44 - options - INFO - Selected option: HOM3 C00300 (\u0394=0.1529, K=$3.00)\n20:20:44 - options - INFO - Processing roll date: 2023-05-01\n20:20:44 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:44 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:45 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:45 - delta - INFO - Selected strike $3.25 with delta 0.1430 (target: 0.15, distance: 0.0070)\n20:20:45 - options - INFO - Selected option: HON3 C00325 (\u0394=0.1430, K=$3.25)\n20:20:45 - options - INFO - Processing roll date: 2023-06-01\n20:20:45 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:45 - futures - INFO - Initialized FuturesManager for HO contracts\n20:20:45 - delta - INFO - Finding 0.15 delta strike from 8 options\n20:20:45 - delta - INFO - Selected strike $3.00 with delta 0.1845 (target: 0.15, distance: 0.0345)\n20:20:45 - options - INFO - Selected option: HOQ3 C00300 (\u0394=0.1845, K=$3.00)\n20:20:45 - options - INFO - Identified 5 options for the period"
+  }
+]
