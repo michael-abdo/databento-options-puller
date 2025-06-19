@@ -42,16 +42,25 @@ class DatabentoBridge:
     the Databento API behavior. Replace with real databento client.
     """
     
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, use_local_file: bool = True):
         """
         Initialize Databento client.
         
         Args:
             api_key: Databento API key (from env if None)
+            use_local_file: Use local JSON file instead of API calls
         """
         self.api_key = api_key or os.getenv('DATABENTO_API_KEY')
+        self.use_local_file = use_local_file
+        self.local_data_file = "/Users/Mike/Desktop/programming/2_proposals/other/databento-options-puller/ho_data_2025_full.json"
         
-        if not self.api_key or not DATABENTO_AVAILABLE or self.api_key == 'mock_mode':
+        if use_local_file:
+            logger.info("🔧 LOCAL FILE MODE: Using local JSON data file instead of API calls")
+            self.mock_mode = False  # Not mock mode, just local file mode
+            self.client = None
+            # Load and cache local data
+            self._load_local_data()
+        elif not self.api_key or not DATABENTO_AVAILABLE or self.api_key == 'mock_mode':
             logger.warning("No API key provided or databento library not available - using mock mode")
             self.mock_mode = True
             self.client = None
@@ -82,6 +91,166 @@ class DatabentoBridge:
             })
         
         logger.info(f"Initialized DatabentoBridge (mock_mode={self.mock_mode})")
+    
+    def _load_local_data(self):
+        """Load and cache local JSON data file - optimized for HO symbols only."""
+        try:
+            logger.info(f"📂 Loading local data file: {self.local_data_file}")
+            
+            if not os.path.exists(self.local_data_file):
+                logger.error(f"❌ Local data file not found: {self.local_data_file}")
+                self.local_data_cache = {}
+                return
+            
+            # Only load HO symbols to save memory and time
+            self.local_data_cache = {}
+            records_processed = 0
+            ho_records_found = 0
+            
+            with open(self.local_data_file, 'r') as f:
+                for line_num, line in enumerate(f, 1):
+                    try:
+                        record = json.loads(line.strip())
+                        records_processed += 1
+                        
+                        symbol = record.get('symbol')
+                        if not symbol or not symbol.startswith('HO'):
+                            continue  # Skip non-HO symbols
+                        
+                        ho_records_found += 1
+                        ts_event = record.get('hd', {}).get('ts_event')
+                        
+                        if not ts_event:
+                            continue
+                        
+                        # Parse timestamp
+                        try:
+                            date = pd.to_datetime(ts_event).date()
+                        except:
+                            continue
+                        
+                        # Store by symbol -> date
+                        if symbol not in self.local_data_cache:
+                            self.local_data_cache[symbol] = {}
+                        
+                        self.local_data_cache[symbol][date] = {
+                            'date': date,
+                            'open': float(record.get('open', 0)),
+                            'high': float(record.get('high', 0)), 
+                            'low': float(record.get('low', 0)),
+                            'close': float(record.get('close', 0)),
+                            'volume': int(record.get('volume', 0)),
+                            'symbol': symbol
+                        }
+                        
+                    except json.JSONDecodeError as e:
+                        if line_num <= 5:  # Only log first 5 errors
+                            logger.warning(f"Skipping invalid JSON on line {line_num}: {e}")
+                        continue
+                    
+                    # Progress logging for large files
+                    if records_processed % 50000 == 0:
+                        logger.info(f"📊 Processed {records_processed} records, found {ho_records_found} HO contracts...")
+            
+            symbols_loaded = len(self.local_data_cache)
+            logger.info(f"✅ Loaded {ho_records_found} HO records from {records_processed} total records")
+            logger.info(f"🗂️ Organized data for {symbols_loaded} unique HO symbols")
+            
+            # Log sample symbols for verification
+            sample_symbols = list(self.local_data_cache.keys())[:10]
+            logger.info(f"📋 Sample HO symbols: {sample_symbols}")
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to load local data file: {e}")
+            self.local_data_cache = {}
+    
+    def _fetch_from_local_data(self, symbol: str, start_date: str, end_date: str, data_type: str = 'futures') -> pd.DataFrame:
+        """
+        Fetch data from local cache.
+        
+        Args:
+            symbol: Symbol to fetch (e.g., 'HO', 'HOF5', 'HOG5')
+            start_date: Start date string
+            end_date: End date string
+            data_type: Type of data ('futures' or 'options')
+            
+        Returns:
+            DataFrame with OHLCV data
+        """
+        logger.info(f"📂 LOCAL DATA: Fetching {data_type} data for '{symbol}' ({start_date} to {end_date})")
+        
+        if not hasattr(self, 'local_data_cache') or not self.local_data_cache:
+            logger.error(f"❌ Local data cache not loaded")
+            return pd.DataFrame()
+        
+        # Convert date strings to date objects
+        try:
+            start_dt = pd.to_datetime(start_date).date()
+            end_dt = pd.to_datetime(end_date).date()
+        except Exception as e:
+            logger.error(f"❌ Failed to parse dates: {e}")
+            return pd.DataFrame()
+        
+        # For HO root symbol, we need to find the best matching contracts
+        matching_records = []
+        
+        if symbol == 'HO':
+            # Find all HO contracts in the date range
+            logger.info(f"🔍 Looking for HO contracts in local data...")
+            ho_symbols = [s for s in self.local_data_cache.keys() if s.startswith('HO') and len(s) >= 4]
+            logger.info(f"📋 Found HO contract symbols: {ho_symbols[:10]}...")  # Show first 10
+            
+            # For each date in range, find the best contract
+            current_date = start_dt
+            while current_date <= end_dt:
+                best_symbol = None
+                best_data = None
+                
+                # Look for data on this date across all HO contracts
+                for ho_symbol in ho_symbols:
+                    if ho_symbol in self.local_data_cache and current_date in self.local_data_cache[ho_symbol]:
+                        # Use this contract's data for this date
+                        best_symbol = ho_symbol
+                        best_data = self.local_data_cache[ho_symbol][current_date]
+                        break
+                
+                if best_data:
+                    matching_records.append(best_data)
+                    logger.debug(f"📊 {current_date}: Using {best_symbol} -> {best_data['close']}")
+                
+                # Move to next day (will be filtered to trading days later)
+                current_date += pd.Timedelta(days=1)
+        
+        else:
+            # Look for exact symbol match
+            if symbol not in self.local_data_cache:
+                logger.warning(f"⚠️ Symbol '{symbol}' not found in local data")
+                return pd.DataFrame()
+            
+            symbol_data = self.local_data_cache[symbol]
+            
+            # Filter by date range
+            current_date = start_dt
+            while current_date <= end_dt:
+                if current_date in symbol_data:
+                    matching_records.append(symbol_data[current_date])
+                current_date += pd.Timedelta(days=1)
+        
+        if not matching_records:
+            logger.warning(f"⚠️ No data found for '{symbol}' in date range {start_date} to {end_date}")
+            return pd.DataFrame()
+        
+        # Convert to DataFrame
+        df = pd.DataFrame(matching_records)
+        df['date'] = pd.to_datetime(df['date'])
+        df = df.sort_values('date').reset_index(drop=True)
+        
+        logger.info(f"✅ LOCAL DATA: Retrieved {len(df)} days of data for '{symbol}'")
+        if len(df) > 0:
+            logger.info(f"📈 Sample data - First row: {df.iloc[0].to_dict()}")
+            logger.info(f"📈 Sample data - Last row: {df.iloc[-1].to_dict()}")
+        
+        return df
     
     def _is_explicit_contract(self, symbol: str) -> bool:
         """
@@ -381,6 +550,10 @@ class DatabentoBridge:
                 symbol = root
             
             logger.debug(f"Mapped root symbol '{root}' to contract '{symbol}' for date {start_date}")
+        
+        # Check if using local file mode first
+        if self.use_local_file:
+            return self._fetch_from_local_data(symbol, start_date, end_date, 'futures')
         
         if not self.mock_mode and self.client:
             logger.info(f"🔍 STEP 1: Attempting Databento API call for futures symbol '{symbol}' ({start_date} to {end_date})")

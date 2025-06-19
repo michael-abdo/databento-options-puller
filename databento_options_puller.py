@@ -184,6 +184,12 @@ def parse_arguments():
         help='Suppress console output except errors'
     )
     
+    parser.add_argument(
+        '--use-api',
+        action='store_true',
+        help='Use live API instead of local data file (requires API key)'
+    )
+    
     return parser.parse_args()
 
 
@@ -219,11 +225,15 @@ def setup_components(args):
     # Initialize Databento client
     if args.mock_mode:
         logger.info("Using mock Databento client")
-        databento_client = DatabentoBridge(api_key='mock_mode')  # Force mock mode
+        databento_client = DatabentoBridge(api_key='mock_mode', use_local_file=False)  # Force mock mode
+    elif args.use_api:
+        api_key = args.api_key or os.getenv('DATABENTO_API_KEY')
+        logger.info("Initializing real Databento client with API calls")
+        databento_client = DatabentoBridge(api_key, use_local_file=False)  # Use API
     else:
         api_key = args.api_key or os.getenv('DATABENTO_API_KEY')
-        logger.info("Initializing real Databento client")
-        databento_client = DatabentoBridge(api_key)
+        logger.info("Initializing Databento client with local file data")
+        databento_client = DatabentoBridge(api_key, use_local_file=True)  # Use local file by default
     
     # Initialize calculators
     delta_calculator = DeltaCalculator(risk_free_rate=args.risk_free_rate)
