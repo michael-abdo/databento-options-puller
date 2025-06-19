@@ -121,47 +121,36 @@ install_dependencies() {
     fi
 }
 
-# Function to setup API key
+# Function to setup API key (now uses local data by default)
 setup_api_key() {
-    if [ -f ".env" ] && grep -q "DATABENTO_API_KEY=" ".env" && ! grep -q "DATABENTO_API_KEY=your_api_key_here" ".env" && ! grep -q "DATABENTO_API_KEY=mock_mode" ".env"; then
+    # Check if .env exists and has a valid API key for live mode
+    if [ -f ".env" ] && grep -q "DATABENTO_API_KEY=" ".env" && ! grep -q "DATABENTO_API_KEY=your_api_key_here" ".env" && ! grep -q "DATABENTO_API_KEY=local_file_mode" ".env"; then
         API_KEY=$(grep "DATABENTO_API_KEY=" ".env" | cut -d'=' -f2)
-        if [ "$API_KEY" != "mock_mode" ] && [ "$API_KEY" != "your_api_key_here" ] && [ -n "$API_KEY" ]; then
-            echo -e "${CHECK} Using existing Databento API key"
+        if [ "$API_KEY" != "local_file_mode" ] && [ "$API_KEY" != "your_api_key_here" ] && [ -n "$API_KEY" ]; then
+            echo -e "${CHECK} Using existing Databento API key for live mode"
             return
         fi
     fi
     
-    echo -e "\n${KEY} Databento API Key Setup"
-    echo -e "   To use real market data, you need a Databento API key."
-    echo -e "   Get one at: ${CYAN}https://databento.com/${NC}"
-    echo -e "   Or press Enter to use mock mode for testing."
+    # Default to local file mode (no API key needed)
+    echo -e "\n${GEAR} Data Source Configuration"
+    echo -e "   ${CHECK} Using local data files (test_2025_data.json)"
+    echo -e "   ${CHECK} No API key required - real market data included"
+    echo -e "   ${CHECK} Ready for immediate use with dates: 2025-01-02 to 2025-01-14"
     
-    echo -n "   Enter your Databento API key: "
-    read -r API_KEY_INPUT
-    
-    if [ -n "$API_KEY_INPUT" ]; then
-        API_KEY="$API_KEY_INPUT"
-        DATA_MODE="live"
-        echo -e "${CHECK} API key configured for live data"
-    else
-        API_KEY="mock_mode"
-        DATA_MODE="mock"
-        echo -e "${WARNING} Using mock mode - data will be simulated"
-    fi
-    
-    # Write to .env file
+    # Write to .env file with local file mode
     cat > .env << EOF
-# Databento API Configuration
-DATABENTO_API_KEY=$API_KEY
+# Databento API Configuration - Local File Mode
+DATABENTO_API_KEY=local_file_mode
 
-# Data mode: 'live' for real data, 'mock' for testing
-DATA_MODE=$DATA_MODE
+# Data mode: 'local' uses local files, 'live' requires API key
+DATA_MODE=local
 
 # Logging configuration
 LOG_LEVEL=INFO
 EOF
     
-    echo -e "${CHECK} Configuration saved to .env file"
+    echo -e "${CHECK} Configuration saved to .env file (local file mode)"
 }
 
 # Function to validate date format
