@@ -52,7 +52,7 @@ class DatabentoBridge:
         """
         self.api_key = api_key or os.getenv('DATABENTO_API_KEY')
         self.use_local_file = use_local_file
-        self.local_data_file = "/Users/Mike/Desktop/programming/2_proposals/other/databento-options-puller/test_2025_data.json"
+        self.local_data_file = "/Users/Mike/Desktop/programming/2_proposals/other/databento-options-puller/data/2025_jan_data.json"
         
         if use_local_file:
             logger.info("🔧 LOCAL FILE MODE: Using local JSON data file instead of API calls")
@@ -115,6 +115,11 @@ class DatabentoBridge:
             
             with open(self.local_data_file, 'r') as f:
                 for line_num, line in enumerate(f, 1):
+                    # Limit processing to prevent timeout
+                    if records_processed > 50000:  # Process max 50k records for quick loading
+                        logger.info(f"📊 Reached record limit ({records_processed}) - stopping to prevent timeout")
+                        break
+                        
                     try:
                         record = json.loads(line.strip())
                         records_processed += 1
@@ -132,8 +137,8 @@ class DatabentoBridge:
                         # Parse timestamp and filter by year for efficiency
                         try:
                             timestamp = pd.to_datetime(ts_event)
-                            if timestamp.year < 2024:
-                                continue  # Skip old data for efficiency
+                            if timestamp.year < 2025:
+                                continue  # Focus on 2025 data for efficiency
                             date = timestamp.date()
                         except:
                             continue

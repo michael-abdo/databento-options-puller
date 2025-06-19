@@ -134,9 +134,9 @@ setup_api_key() {
     
     # Default to local file mode (no API key needed)
     echo -e "\n${GEAR} Data Source Configuration"
-    echo -e "   ${CHECK} Using local data files (test_2025_data.json)"
+    echo -e "   ${CHECK} Using local data files (data/2025_jan_data.json)"
     echo -e "   ${CHECK} No API key required - real market data included"
-    echo -e "   ${CHECK} Ready for immediate use with dates: 2025-01-02 to 2025-01-14"
+    echo -e "   ${CHECK} January 2025 dataset with HO futures and OH options data"
     
     # Write to .env file with local file mode
     cat > .env << EOF
