@@ -8,7 +8,7 @@
 - This eliminates API dependency and N+1 query timeout issues
 
 ### 2. Output Constraint
-- The output of the system must exactly match the predefined format, with zero deviations.
+- The output of the system must match the format of the output and what the output is attempting to do
 - /output/final_output.csv
 
 ### 3. Throughput Constraint
