@@ -52,7 +52,7 @@ class DatabentoBridge:
         """
         self.api_key = api_key or os.getenv('DATABENTO_API_KEY')
         self.use_local_file = use_local_file
-        self.local_data_file = "/Users/Mike/Desktop/programming/2_proposals/other/databento-options-puller/data/2025_jan_data.json"
+        self.local_data_file = "/Users/Mike/Desktop/programming/2_proposals/other/databento-options-puller/data/jan_2025_subset.json"
         
         if use_local_file:
             logger.info("🔧 LOCAL FILE MODE: Using local JSON data file instead of API calls")
@@ -116,7 +116,7 @@ class DatabentoBridge:
             with open(self.local_data_file, 'r') as f:
                 for line_num, line in enumerate(f, 1):
                     # Limit processing to prevent timeout
-                    if records_processed > 50000:  # Process max 50k records for quick loading
+                    if records_processed > 50000:  # Process max 50k records to prevent timeout
                         logger.info(f"📊 Reached record limit ({records_processed}) - stopping to prevent timeout")
                         break
                         

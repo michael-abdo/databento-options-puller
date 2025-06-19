@@ -1,0 +1,98 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Databento Dataset Summary Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; text-align: center; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; }
+        .stat { background: #ecf0f1; padding: 15px; margin: 10px 0; border-radius: 5px; border-left: 4px solid #3498db; }
+        .highlight { color: #e74c3c; font-weight: bold; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .symbol-type { background: #3498db; color: white; padding: 8px 12px; margin: 5px; border-radius: 20px; display: inline-block; }
+        .recommendations { background: #2ecc71; color: white; padding: 20px; border-radius: 5px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Databento Options Dataset Analysis Report</h1>
+        
+        <h2>📈 Dataset Overview</h2>
+        <div class="stat">
+            <strong>Total Records:</strong> <span class="highlight">2,500</span>
+        </div>
+        <div class="stat">
+            <strong>Unique Symbols:</strong> <span class="highlight">319</span>
+        </div>
+        <div class="stat">
+            <strong>Date Range:</strong> <span class="highlight">2010-06-06 to 2010-07-19</span>
+        </div>
+        <div class="stat">
+            <strong>Trading Days:</strong> <span class="highlight">38</span>
+        </div>
+        
+        <h2>💰 Market Data Summary</h2>
+        <div class="grid">
+            <div class="stat">
+                <strong>Total Volume:</strong><br>
+                <span class="highlight">3,392,747</span> contracts
+            </div>
+            <div class="stat">
+                <strong>Average Price:</strong><br>
+                <span class="highlight">$0.4772</span>
+            </div>
+        </div>
+        <div class="grid">
+            <div class="stat">
+                <strong>Price Range:</strong><br>
+                <span class="highlight">$-0.3032 - $2.4664</span>
+            </div>
+            <div class="stat">
+                <strong>Most Active Symbol:</strong><br>
+                <span class="highlight">HOQ0</span>
+            </div>
+        </div>
+        
+        <h2>🎯 Symbol Type Breakdown</h2>
+        <div style="text-align: center; margin: 20px 0;">
+<span class="symbol-type">HO_Futures: 2,208</span><span class="symbol-type">OH_Put_Options: 152</span><span class="symbol-type">OH_Call_Options: 138</span><span class="symbol-type">Other: 2</span>
+        </div>
+        
+        <h2>📊 Visualization Files Generated</h2>
+        <div class="stat">
+            <strong>Main Dashboard:</strong> <a href="main_dashboard.html">Interactive Multi-Panel Dashboard</a><br>
+            <em>Comprehensive overview with volume trends, price distributions, and trading activity</em>
+        </div>
+        <div class="stat">
+            <strong>3D Visualization:</strong> <a href="3d_options_visualization.html">3D Options Analysis</a><br>
+            <em>Three-dimensional view of options data showing Date × Strike × Price relationships</em>
+        </div>
+        
+        <div class="recommendations">
+            <h2 style="margin-top: 0;">🎯 Key Insights & Recommendations</h2>
+            <ul>
+                <li><strong>Rich Dataset:</strong> 2,500 records across 38 trading days</li>
+                <li><strong>Multiple Instrument Types:</strong> Futures, options, and spread contracts</li>
+                <li><strong>Volume Analysis:</strong> Total volume of 3,392,747 contracts indicates active trading</li>
+                <li><strong>Price Precision:</strong> High-precision pricing data suitable for quantitative analysis</li>
+                <li><strong>Time Series:</strong> Perfect for trend analysis and volatility modeling</li>
+            </ul>
+            
+            <h3>Best Visualization Approaches:</h3>
+            <ul>
+                <li><strong>Time Series Analysis:</strong> Volume and price trends over time</li>
+                <li><strong>Heatmaps:</strong> Trading activity by date and instrument type</li>
+                <li><strong>3D Surfaces:</strong> Options pricing across strike and time dimensions</li>
+                <li><strong>Interactive Dashboards:</strong> Multi-dimensional exploration</li>
+            </ul>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px; color: #7f8c8d;">
+            <em>Report generated on 2025-06-18 21:11:44</em>
+        </div>
+    </div>
+</body>
+</html>
+        

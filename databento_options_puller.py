@@ -594,15 +594,6 @@ def main():
             str(output_path).startswith('output/')
         ) and not (args.symbol == 'OH' and args.start_date == '2021-12-02' and args.end_date == '2022-03-09')
         
-        # Auto-open disabled for continuous processing
-        # if should_auto_open and sys.platform == 'darwin':
-        #     try:
-        #         import subprocess
-        #         subprocess.run(['open', str(output_path)], check=False)
-        #         print(f"📱 Opening CSV file automatically...")
-        #     except Exception as e:
-        #         logger.debug(f"Could not auto-open file: {e}")
-        
         return 0
         
     except Exception as e:

@@ -266,13 +266,16 @@ python3 -m unittest discover tests -v
 
 ## ⚠️ Important Notes
 
-1. **Data Sources**: System uses local data files by default (`test_2025_data.json`). To use live Databento API, use `--use-api` flag and provide valid API key.
+1. **Data Sources**: System uses local data files by default. Current configuration uses `jan_2025_subset.json` for fast loading. The full dataset (`glbx-mdp3-20100606-20250617.ohlcv-1d.json`) contains 15 years of data with 84.7% coverage (missing only market holidays).
 
-2. **Data Availability**: Option data exists primarily in January 2025 in current test files. Use dates like `2025-01-02` to `2025-01-14` for testing with real data.
+2. **Data Availability**: 
+   - **Full dataset**: June 2010 to June 2025 (424,762 records)
+   - **Current subset**: January 2025 (2,502 records) for fast testing
+   - **Coverage**: 84.7% - missing days are expected market closures
 
-3. **M+2 Strategy**: System correctly selects options 2 months ahead, but only includes options with actual price data in your requested date range.
+3. **M+2 Strategy**: System correctly implements the M+2 rolling strategy, selecting options 2 months ahead on the first trading day of each month. Only options with actual price data in your requested date range appear in output.
 
-4. **Target Validation**: Use `./START_HERE --test` to run exact validation against target output (`2021-12-02` to `2022-03-09`).
+4. **Performance**: System handles 50+ day ranges efficiently. Larger date ranges may require adjusting the data source configuration in `src/databento_client.py`.
 
 ## 🤝 Contributing
 
