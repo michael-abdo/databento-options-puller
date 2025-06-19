@@ -52,7 +52,7 @@ class DatabentoBridge:
         """
         self.api_key = api_key or os.getenv('DATABENTO_API_KEY')
         self.use_local_file = use_local_file
-        self.local_data_file = "/Users/Mike/Desktop/programming/2_proposals/other/databento-options-puller/data/jan_2025_subset.json"
+        self.local_data_file = "/Users/Mike/Desktop/programming/2_proposals/other/databento-options-puller/data/glbx-mdp3-20100606-20250617.ohlcv-1d.json"
         
         if use_local_file:
             logger.info("🔧 LOCAL FILE MODE: Using local JSON data file instead of API calls")
@@ -113,10 +113,20 @@ class DatabentoBridge:
             records_processed = 0
             ho_records_found = 0
             
-            with open(self.local_data_file, 'r') as f:
-                for line_num, line in enumerate(f, 1):
+            # Read file in reverse to get most recent data first
+            import subprocess
+            
+            # Use tail to get the last 150k lines (most recent data)
+            logger.info(f"📊 Loading most recent 150k lines from dataset...")
+            try:
+                result = subprocess.run(['tail', '-n', '150000', self.local_data_file], 
+                                      capture_output=True, text=True, check=True)
+                lines = result.stdout.strip().split('\n')
+                logger.info(f"📊 Loaded {len(lines)} recent lines for processing")
+                
+                for line_num, line in enumerate(lines, 1):
                     # Limit processing to prevent timeout
-                    if records_processed > 50000:  # Process max 50k records to prevent timeout
+                    if records_processed > 100000:  # Process max 100k records 
                         logger.info(f"📊 Reached record limit ({records_processed}) - stopping to prevent timeout")
                         break
                         
@@ -134,11 +144,9 @@ class DatabentoBridge:
                         if not ts_event:
                             continue
                         
-                        # Parse timestamp and filter by year for efficiency
+                        # Parse timestamp
                         try:
                             timestamp = pd.to_datetime(ts_event)
-                            if timestamp.year < 2025:
-                                continue  # Focus on 2025 data for efficiency
                             date = timestamp.date()
                         except:
                             continue
@@ -167,6 +175,46 @@ class DatabentoBridge:
                     # Progress logging for large files
                     if records_processed % 50000 == 0:
                         logger.info(f"📊 Processed {records_processed} records, found {ho_records_found} HO/OH contracts...")
+                        
+            except subprocess.CalledProcessError as e:
+                logger.error(f"❌ Failed to read recent data with tail command: {e}")
+                logger.info(f"🔄 Falling back to reading from beginning of file...")
+                # Fallback to original method
+                with open(self.local_data_file, 'r') as f:
+                    for line_num, line in enumerate(f, 1):
+                        if records_processed > 50000:  # Smaller limit for fallback
+                            break
+                        try:
+                            record = json.loads(line.strip())
+                            records_processed += 1
+                            
+                            symbol = record.get('symbol')
+                            if not symbol or not (symbol.startswith('HO') or symbol.startswith('OH')):
+                                continue
+                            
+                            ho_records_found += 1
+                            ts_event = record.get('hd', {}).get('ts_event')
+                            if not ts_event:
+                                continue
+                            
+                            timestamp = pd.to_datetime(ts_event)
+                            date = timestamp.date()
+                            
+                            if symbol not in self.local_data_cache:
+                                self.local_data_cache[symbol] = {}
+                            
+                            if date not in self.local_data_cache[symbol]:
+                                self.local_data_cache[symbol][date] = {
+                                    'date': date,
+                                    'open': float(record.get('open', 0)),
+                                    'high': float(record.get('high', 0)), 
+                                    'low': float(record.get('low', 0)),
+                                    'close': float(record.get('close', 0)),
+                                    'volume': int(record.get('volume', 0)),
+                                    'symbol': symbol
+                                }
+                        except:
+                            continue
             
             symbols_loaded = len(self.local_data_cache)
             logger.info(f"✅ Loaded {ho_records_found} HO records from {records_processed} total records")
