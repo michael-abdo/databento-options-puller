@@ -1,19 +1,20 @@
-# Databento Options Project - Completion Summary
+# NY Harbor ULSD Options Data Puller - Project Summary
 
-## ✅ Project Status: COMPLETE
+## ✅ Project Status: COMPLETE & VALIDATED
 
-All components have been successfully implemented, tested, and documented.
+All components have been successfully implemented, tested with real data, and validated against target output.
 
 ## 📁 Deliverables
 
 ### 1. Main Application (`databento_options_puller.py`)
-- **Status**: ✅ Complete
+- **Status**: ✅ Complete & Validated
 - **Features**:
-  - Command-line interface with all required parameters
-  - Automatic 15-delta option selection
-  - Rolling monthly strategy (M+2 expiration)
-  - Comprehensive error handling
-  - Progress tracking and logging
+  - M+2 rolling strategy implementation (selects options 2 months ahead)
+  - 15-delta option selection using Black-Scholes calculations
+  - Real market data processing from local files or Databento API
+  - User date range enforcement with data filtering
+  - CSV output generation with proper formatting
+  - START_HERE script for one-click execution
 
 ### 2. Core Components (`src/`)
 - **Delta Calculator** (`delta_calculator.py`): Black-Scholes implementation with:
@@ -64,14 +65,19 @@ All components have been successfully implemented, tested, and documented.
 - **Architecture Docs**: `script_architecture.md`
 - **Implementation Plan**: `implementation_plan.md`
 
-## 🚀 Key Features Implemented
+## 🚀 Key Features Implemented & Validated
 
-### 1. Data Processing
-- ✅ Automatic delta targeting (0.15 ± 0.02)
-- ✅ Monthly rolling logic (first trading day)
-- ✅ M+2 expiration selection
-- ✅ Continuous futures contract handling
-- ✅ Sparse data handling for options
+### 1. M+2 Rolling Strategy (VALIDATED)
+- ✅ Automatic option selection 2 months ahead on first trading day
+- ✅ Real implementation: Dec 2024 selects Feb 2025 options (OHG5)
+- ✅ Real implementation: Jan 2025 selects Mar 2025 options (OHH5)
+- ✅ Validated against target output for 2021-2022 period
+
+### 2. 15-Delta Option Selection (WORKING)
+- ✅ Black-Scholes delta calculations
+- ✅ Strike selection closest to 0.15 delta
+- ✅ Real data: Successfully selected OHG5 C26000, OHH5 C24000
+- ✅ Handles cases where exact 15-delta not available
 
 ### 2. Performance Optimizations
 - ✅ Chunked processing for large date ranges

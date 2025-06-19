@@ -297,6 +297,10 @@ def run_data_pull(args, components, output_path):
     # First, collect all option data to determine actual trading dates
     all_option_data = {}
     all_trading_dates = set()
+    options_with_data_in_range = []  # Track which options have data in user's date range
+    
+    user_start = parse_date(args.start_date).date()
+    user_end = parse_date(args.end_date).date()
     
     for option in selected_options:
         symbol = option['symbol']
@@ -314,14 +318,26 @@ def run_data_pull(args, components, output_path):
         )
         
         if price_data is not None and not price_data.empty:
-            all_option_data[symbol] = price_data
-            # Collect all unique dates from this option
+            # Check if any data falls within user's date range
+            dates_in_range = 0
             for _, row in price_data.iterrows():
-                price_date = pd.to_datetime(row['date'])
-                all_trading_dates.add(price_date.date())
-            logger.info(f"Retrieved {len(price_data)} days of data for {symbol}")
+                price_date = pd.to_datetime(row['date']).date()
+                if user_start <= price_date <= user_end:
+                    dates_in_range += 1
+                    all_trading_dates.add(price_date)
+            
+            if dates_in_range > 0:
+                all_option_data[symbol] = price_data
+                options_with_data_in_range.append(option)
+                logger.info(f"Retrieved {len(price_data)} days of data for {symbol}, {dates_in_range} within user range")
+            else:
+                logger.info(f"Option {symbol} has no data within user date range, excluding from output")
         else:
             logger.warning(f"No data returned for {symbol}")
+    
+    # Update selected_options to only include those with data in range
+    selected_options = options_with_data_in_range
+    logger.info(f"After filtering: {len(selected_options)} options have data within user date range")
     
     # Handle special case for exact target format
     if is_exact_target_format:

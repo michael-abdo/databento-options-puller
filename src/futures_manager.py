@@ -163,9 +163,12 @@ class FuturesManager:
         
         roll_schedule = []
         
-        # Start from the month containing start_date
-        current_year = start_date.year
-        current_month = start_date.month
+        # IMPORTANT: Start from 2 months BEFORE start_date to catch options 
+        # that were selected before our period but are still active during it
+        # (M+2 means options selected 2 months ago are still trading)
+        roll_start = start_date - timedelta(days=62)  # ~2 months back
+        current_year = roll_start.year
+        current_month = roll_start.month
         
         while True:
             roll_date = self.get_roll_date(current_year, current_month)
@@ -174,31 +177,31 @@ class FuturesManager:
             if roll_date > end_date:
                 break
             
-            # Only include if roll date is within our range
-            if roll_date >= start_date:
-                # Determine contracts involved
-                if current_month == 1:
-                    prev_month = 12
-                    prev_year = current_year - 1
-                else:
-                    prev_month = current_month - 1
-                    prev_year = current_year
-                
-                prev_contract = self.get_contract_symbol(datetime(prev_year, prev_month, 1))
-                new_contract = self.get_contract_symbol(datetime(current_year, current_month, 1))
-                
-                roll_event = {
-                    'roll_date': roll_date,
-                    'from_contract': prev_contract,
-                    'to_contract': new_contract,
-                    'month': current_month,
-                    'year': current_year
-                }
-                
-                roll_schedule.append(roll_event)
-                
-                logger.debug(f"Roll event: {roll_date.strftime('%Y-%m-%d')} "
-                           f"{prev_contract} → {new_contract}")
+            # Include if the roll date is before end date
+            # This catches options selected before start_date that are still active
+            # Determine contracts involved
+            if current_month == 1:
+                prev_month = 12
+                prev_year = current_year - 1
+            else:
+                prev_month = current_month - 1
+                prev_year = current_year
+            
+            prev_contract = self.get_contract_symbol(datetime(prev_year, prev_month, 1))
+            new_contract = self.get_contract_symbol(datetime(current_year, current_month, 1))
+            
+            roll_event = {
+                'roll_date': roll_date,
+                'from_contract': prev_contract,
+                'to_contract': new_contract,
+                'month': current_month,
+                'year': current_year
+            }
+            
+            roll_schedule.append(roll_event)
+            
+            logger.debug(f"Roll event: {roll_date.strftime('%Y-%m-%d')} "
+                       f"{prev_contract} → {new_contract}")
             
             # Move to next month
             if current_month == 12:

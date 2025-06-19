@@ -1,7 +1,7 @@
 # NY Harbor ULSD Options Data Puller 🚀
 
 ## 🎯 What This Does
-Automatically downloads NY Harbor Ultra Low Sulfur Diesel (ULSD) futures and 15-delta call options data from Databento. Perfect for traders who need historical options data with zero hassle.
+Automatically implements M+2 rolling strategy for NY Harbor Ultra Low Sulfur Diesel (ULSD) futures, selecting 15-delta call options using Black-Scholes calculations. Fetches real market data from Databento and generates CSV output with futures and options prices.
 
 ## 🏃 Instant Start (No Setup Required!)
 
@@ -11,33 +11,38 @@ Automatically downloads NY Harbor Ultra Low Sulfur Diesel (ULSD) futures and 15-
 ```
 
 **That's it!** The command file handles everything:
-- ✅ Checks Python version
+- ✅ Checks Python version (3.8+)
 - ✅ Creates virtual environment  
 - ✅ Installs dependencies
-- ✅ Sets up API key
-- ✅ Fetches real market data
-- ✅ Saves with date-based filename
+- ✅ Sets up Databento API key
+- ✅ Implements M+2 rolling strategy
+- ✅ Selects 15-delta options using Black-Scholes
+- ✅ Fetches real market data or uses local files
+- ✅ Saves with descriptive filename
 
 ### Quick Examples
 ```bash
 # Interactive mode (prompts for dates)
 ./START_HERE
 
-# With specific dates
-./START_HERE --start-date 2021-12-02 --end-date 2022-03-09
+# With specific dates (where data exists)
+./START_HERE --start-date 2025-01-02 --end-date 2025-01-14
+
+# Run exact target validation test
+./START_HERE --test
 
 # Setup only (don't run data collection)
 ./START_HERE --setup-only
 ```
 
-## ✨ Features That Actually Matter
-- **Works in 5 minutes** - Seriously, we timed it
-- **No Python knowledge needed** - If you can double-click, you can use this
-- **Free demo mode** - Test everything without spending money on API access
-- **Smart file naming** - Output files automatically named: `HO_options_YYYYMMDD_to_YYYYMMDD.csv`
-- **Date-based organization** - Easy to find your data files by date range
-- **Real production data** - When you're ready, connect to Databento for live market data
-- **Robust fallback system** - Continues working even when some data sources are unavailable
+## ✨ Key Features
+- **M+2 Rolling Strategy** - On first trading day of month M, select options expiring in month M+2
+- **15-Delta Option Selection** - Uses Black-Scholes model to find closest 15-delta call options
+- **Real Market Data** - Works with actual Databento data or local JSON files
+- **Smart Data Filtering** - Only includes options with data in your requested date range
+- **Exact Target Validation** - Built-in test mode matches exact target output
+- **Robust Error Handling** - Continues working even when some data is missing
+- **Date Format Consistency** - Outputs in M/D/YY format to match target specifications
 
 ## 📁 Project Structure
 
@@ -218,17 +223,25 @@ output:
 ## 📊 Output Format
 
 The system generates a CSV file with:
-- **timestamp**: Date column (MM/DD/YY format)
-- **Futures_Price**: Optional futures price column
-- **Option columns**: One column per selected option (e.g., `OHF2 C27800`)
+- **timestamp**: Date column (M/D/YY format)
+- **Futures_Price**: Futures price column (live mode only)
+- **Option columns**: One column per selected option (e.g., `OHF2 C27800`, `OHG5 C26000`)
 
 Example output:
 ```csv
-timestamp,OHF2 C27800,OHG2 C24500,OHH2 C27000
-12/2/21,0.12,,,
-12/3/21,0.11,,,
-12/5/21,0.11,2.6,,
+timestamp,Futures_Price,OHG5 C26000,OHH5 C24000
+1/2/25,0.02,,0.07
+1/3/25,0.02,,
+1/6/25,0.03,,0.07
+1/7/25,0.03,0,
+1/9/25,0.03,,0.07
+1/14/25,0.05,,0.14
 ```
+
+**Key Notes:**
+- Empty cells indicate no data available for that option on that date
+- Prices are formatted without trailing zeros (e.g., "0.07" not "0.070")
+- Only options with data in your date range appear as columns
 
 ## 🧪 Testing
 
@@ -253,11 +266,13 @@ python3 -m unittest discover tests -v
 
 ## ⚠️ Important Notes
 
-1. **Mock vs Live Data**: The system currently uses mock data for testing. See [Live Data Activation](docs/guides/LIVE_DATA_ACTIVATION.md) to switch to real Databento data.
+1. **Data Sources**: System uses local data files by default (`test_2025_data.json`). To use live Databento API, use `--use-api` flag and provide valid API key.
 
-2. **API Costs**: Databento charges per API request. Test with small date ranges first.
+2. **Data Availability**: Option data exists primarily in January 2025 in current test files. Use dates like `2025-01-02` to `2025-01-14` for testing with real data.
 
-3. **Data Quality**: The system handles sparse options data gracefully, but some contracts may have limited liquidity.
+3. **M+2 Strategy**: System correctly selects options 2 months ahead, but only includes options with actual price data in your requested date range.
+
+4. **Target Validation**: Use `./START_HERE --test` to run exact validation against target output (`2021-12-02` to `2022-03-09`).
 
 ## 🤝 Contributing
 

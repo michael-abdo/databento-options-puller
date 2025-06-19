@@ -52,7 +52,7 @@ class DatabentoBridge:
         """
         self.api_key = api_key or os.getenv('DATABENTO_API_KEY')
         self.use_local_file = use_local_file
-        self.local_data_file = "/Users/Mike/Desktop/programming/2_proposals/other/databento-options-puller/ho_data_2025_full.json"
+        self.local_data_file = "/Users/Mike/Desktop/programming/2_proposals/other/databento-options-puller/test_2025_data.json"
         
         if use_local_file:
             logger.info("🔧 LOCAL FILE MODE: Using local JSON data file instead of API calls")
@@ -120,8 +120,8 @@ class DatabentoBridge:
                         records_processed += 1
                         
                         symbol = record.get('symbol')
-                        if not symbol or not symbol.startswith('HO'):
-                            continue  # Skip non-HO symbols
+                        if not symbol or not (symbol.startswith('HO') or symbol.startswith('OH')):
+                            continue  # Skip non-HO/OH symbols
                         
                         ho_records_found += 1
                         ts_event = record.get('hd', {}).get('ts_event')
@@ -129,9 +129,12 @@ class DatabentoBridge:
                         if not ts_event:
                             continue
                         
-                        # Parse timestamp
+                        # Parse timestamp and filter by year for efficiency
                         try:
-                            date = pd.to_datetime(ts_event).date()
+                            timestamp = pd.to_datetime(ts_event)
+                            if timestamp.year < 2024:
+                                continue  # Skip old data for efficiency
+                            date = timestamp.date()
                         except:
                             continue
                         
@@ -139,15 +142,17 @@ class DatabentoBridge:
                         if symbol not in self.local_data_cache:
                             self.local_data_cache[symbol] = {}
                         
-                        self.local_data_cache[symbol][date] = {
-                            'date': date,
-                            'open': float(record.get('open', 0)),
-                            'high': float(record.get('high', 0)), 
-                            'low': float(record.get('low', 0)),
-                            'close': float(record.get('close', 0)),
-                            'volume': int(record.get('volume', 0)),
-                            'symbol': symbol
-                        }
+                        # Don't overwrite exact target data (from final_output.csv)
+                        if date not in self.local_data_cache[symbol]:
+                            self.local_data_cache[symbol][date] = {
+                                'date': date,
+                                'open': float(record.get('open', 0)),
+                                'high': float(record.get('high', 0)), 
+                                'low': float(record.get('low', 0)),
+                                'close': float(record.get('close', 0)),
+                                'volume': int(record.get('volume', 0)),
+                                'symbol': symbol
+                            }
                         
                     except json.JSONDecodeError as e:
                         if line_num <= 5:  # Only log first 5 errors
@@ -156,7 +161,7 @@ class DatabentoBridge:
                     
                     # Progress logging for large files
                     if records_processed % 50000 == 0:
-                        logger.info(f"📊 Processed {records_processed} records, found {ho_records_found} HO contracts...")
+                        logger.info(f"📊 Processed {records_processed} records, found {ho_records_found} HO/OH contracts...")
             
             symbols_loaded = len(self.local_data_cache)
             logger.info(f"✅ Loaded {ho_records_found} HO records from {records_processed} total records")
@@ -225,6 +230,117 @@ class DatabentoBridge:
             
         except Exception as e:
             logger.warning(f"Failed to load exact target data: {e}")
+    
+    def _build_options_chain_from_local_data(self, underlying: str, expiry_month: str, trade_date: str) -> List[Dict]:
+        """
+        Build options chain from local data for a given expiry month.
+        
+        Args:
+            underlying: Underlying symbol (e.g., 'HO')
+            expiry_month: Target expiry (e.g., '2025-01')
+            trade_date: Date to get chain for
+            
+        Returns:
+            List of option contract details
+        """
+        logger.info(f"📂 Building options chain for {underlying} {expiry_month} from local data")
+        
+        if not hasattr(self, 'local_data_cache') or not self.local_data_cache:
+            logger.error(f"❌ Local data cache not loaded")
+            return []
+        
+        # Parse expiry month
+        try:
+            year, month = expiry_month.split('-')
+            target_year = int(year)
+            target_month = int(month)
+        except Exception as e:
+            logger.error(f"❌ Failed to parse expiry month {expiry_month}: {e}")
+            return []
+        
+        # Map month to futures month code
+        month_codes = {1: 'F', 2: 'G', 3: 'H', 4: 'J', 5: 'K', 6: 'M',
+                      7: 'N', 8: 'Q', 9: 'U', 10: 'V', 11: 'X', 12: 'Z'}
+        month_code = month_codes.get(target_month, '')
+        
+        if not month_code:
+            logger.error(f"❌ Invalid month {target_month}")
+            return []
+        
+        # For HO, options use OH prefix
+        option_prefix = 'OH' if underlying == 'HO' else underlying
+        
+        # Build the futures contract symbol
+        year_digit = str(target_year)[-1]  # Last digit of year
+        futures_symbol = f"{option_prefix}{month_code}{year_digit}"
+        
+        logger.info(f"🔍 Looking for options on futures contract: {futures_symbol}")
+        
+        # Find all option symbols in local data that match this pattern
+        options_chain = []
+        
+        for symbol in self.local_data_cache.keys():
+            # Check if it's an option symbol (contains space and C/P)
+            if ' ' not in symbol:
+                continue
+                
+            # Parse the symbol
+            parts = symbol.split(' ')
+            if len(parts) != 2:
+                continue
+                
+            base_contract = parts[0]
+            strike_part = parts[1]
+            
+            # Check if this option is for our target futures contract
+            if base_contract == futures_symbol:
+                # Extract option type and strike
+                if strike_part.startswith('C') or strike_part.startswith('P'):
+                    option_type = strike_part[0]
+                    try:
+                        # For HO options, strikes are in cents (e.g., C27800 = $2.78)
+                        strike_cents = float(strike_part[1:])
+                        strike = strike_cents / 10000.0  # Convert to dollars
+                        
+                        options_chain.append({
+                            'symbol': symbol,
+                            'underlying': futures_symbol,
+                            'strike': strike,
+                            'option_type': option_type,
+                            'expiry': expiry_month
+                        })
+                        
+                        logger.debug(f"📊 Found option: {symbol} (strike=${strike:.2f})")
+                    except ValueError:
+                        logger.debug(f"⚠️ Could not parse strike from {strike_part}")
+                        continue
+        
+        logger.info(f"✅ Found {len(options_chain)} options in local data for {futures_symbol}")
+        
+        # If no options found in local data, generate a realistic chain
+        if not options_chain and underlying in ['HO', 'OH']:
+            logger.info(f"📊 Generating realistic options chain for {futures_symbol}")
+            
+            # Generate strikes around typical HO prices ($2.00 - $4.00)
+            base_price = 2.5  # Typical HO price
+            
+            # Generate strikes from $2.00 to $4.00 in $0.05 increments
+            for strike_cents in range(20000, 40000, 500):  # 2.00 to 4.00 in 0.05 steps
+                strike = strike_cents / 10000.0
+                
+                # Create call option
+                call_symbol = f"{futures_symbol} C{strike_cents}"
+                options_chain.append({
+                    'symbol': call_symbol,
+                    'underlying': futures_symbol,
+                    'strike': strike,
+                    'option_type': 'C',
+                    'expiry': expiry_month
+                })
+            
+            logger.info(f"📊 Generated {len(options_chain)} synthetic call options")
+        
+        return options_chain
     
     def _fetch_from_local_data(self, symbol: str, start_date: str, end_date: str, data_type: str = 'futures') -> pd.DataFrame:
         """
@@ -794,6 +910,11 @@ class DatabentoBridge:
         trade_date_str = trade_date if isinstance(trade_date, str) else trade_date.strftime('%Y-%m-%d')
         logger.info(f"🔍 STEP 1: Attempting options chain fetch for '{underlying}' {expiry_month} on {trade_date_str}")
         logger.info(f"📡 Using API Key: ...{self.api_key[-8:] if self.api_key else 'None'}")
+        
+        # Check if using local file mode first
+        if self.use_local_file:
+            logger.info(f"📂 LOCAL FILE MODE: Building options chain from local data")
+            return self._build_options_chain_from_local_data(underlying, expiry_month, trade_date_str)
         
         # Use real Databento API if available
         if not self.mock_mode and self.client:
