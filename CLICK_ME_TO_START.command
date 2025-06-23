@@ -7,6 +7,48 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR"
 
+# Function to check for updates
+check_for_updates() {
+    if [ -d ".git" ]; then
+        echo "🔄 Checking for updates..."
+        
+        # Check if we can reach GitHub
+        if git ls-remote --exit-code --heads origin &>/dev/null; then
+            # Fetch latest changes
+            git fetch origin api-working-version &>/dev/null
+            
+            # Check if we're behind
+            LOCAL=$(git rev-parse HEAD)
+            REMOTE=$(git rev-parse origin/api-working-version)
+            
+            if [ "$LOCAL" != "$REMOTE" ]; then
+                echo ""
+                echo "📦 Updates available! Would you like to download them?"
+                echo "This will get the latest bug fixes and improvements."
+                echo ""
+                echo -n "Download updates? (y/n): "
+                read update_choice
+                
+                if [ "$update_choice" = "y" ] || [ "$update_choice" = "Y" ]; then
+                    echo "Downloading updates..."
+                    git pull origin api-working-version
+                    echo "✅ Updated successfully!"
+                    echo ""
+                    echo "Restarting with new version..."
+                    exec "$0"
+                else
+                    echo "Skipping updates for now."
+                fi
+            else
+                echo "✅ You're running the latest version!"
+            fi
+        else
+            echo "⚠️  Cannot check for updates (no internet connection?)"
+        fi
+        echo ""
+    fi
+}
+
 # Clear screen and show welcome
 clear
 echo "╔══════════════════════════════════════════════════════════╗"
@@ -14,8 +56,10 @@ echo "║     Welcome to Databento Options Puller! 🚀             ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 echo "This tool downloads historical options data from Databento."
-echo "Setup takes about 3-5 minutes."
 echo ""
+
+# Check for updates first
+check_for_updates
 
 # Check if .env exists and has a real API key
 check_api_key() {
@@ -119,41 +163,102 @@ fi
 echo "Press Enter to continue..."
 read
 
-# Check if already set up
-if [ -d "venv" ] && [ -f ".env" ]; then
-    echo "✅ Already set up! What would you like to do?"
+# Function to get date range
+get_date_range() {
     echo ""
-    echo "1) Run the demo (no API key needed)"
-    echo "2) Run with real data (requires API key)"
-    echo "3) Re-run setup"
-    echo "4) Exit"
+    echo "╔══════════════════════════════════════════════════════════╗"
+    echo "║                  Date Range Selection                    ║"
+    echo "╚══════════════════════════════════════════════════════════╝"
+    echo ""
+    echo "Choose a date range for your data:"
+    echo "1) Last 30 days"
+    echo "2) Last 60 days"
+    echo "3) Last 90 days"
+    echo "4) Custom date range"
     echo ""
     echo -n "Enter your choice (1-4): "
-    read choice
+    read date_choice
     
-    case $choice in
+    # Calculate dates
+    END_DATE=$(date +%Y-%m-%d)
+    
+    case $date_choice in
         1)
-            echo "Running demo..."
-            python3 simple_demo.py
+            START_DATE=$(date -v-30d +%Y-%m-%d 2>/dev/null || date -d '30 days ago' +%Y-%m-%d)
+            echo "Selected: Last 30 days ($START_DATE to $END_DATE)"
             ;;
         2)
-            echo "Running with real data..."
-            source venv/bin/activate
-            python databento_options_puller.py --output "output/options_data.csv"
+            START_DATE=$(date -v-60d +%Y-%m-%d 2>/dev/null || date -d '60 days ago' +%Y-%m-%d)
+            echo "Selected: Last 60 days ($START_DATE to $END_DATE)"
             ;;
         3)
-            echo "Re-running setup..."
-            ./setup_mac.sh
+            START_DATE=$(date -v-90d +%Y-%m-%d 2>/dev/null || date -d '90 days ago' +%Y-%m-%d)
+            echo "Selected: Last 90 days ($START_DATE to $END_DATE)"
             ;;
         4)
-            echo "Goodbye!"
-            exit 0
+            echo ""
+            echo "Enter custom date range:"
+            echo -n "Start date (YYYY-MM-DD): "
+            read START_DATE
+            echo -n "End date (YYYY-MM-DD): "
+            read END_DATE
+            echo "Selected: $START_DATE to $END_DATE"
             ;;
         *)
-            echo "Invalid choice. Running demo..."
-            python3 simple_demo.py
+            # Default to last 30 days
+            START_DATE=$(date -v-30d +%Y-%m-%d 2>/dev/null || date -d '30 days ago' +%Y-%m-%d)
+            echo "Invalid choice. Using last 30 days ($START_DATE to $END_DATE)"
             ;;
     esac
+    
+    # Create output filename with dates
+    OUTPUT_FILE="output/options_data_${START_DATE}_to_${END_DATE}.csv"
+}
+
+# Check if already set up
+if [ -d "venv" ] && [ -f ".env" ]; then
+    echo "✅ Already set up!"
+    
+    # Determine if API key is valid
+    if check_api_key; then
+        DATA_MODE="live"
+    else
+        DATA_MODE="mock"
+    fi
+    
+    # Get date range
+    get_date_range
+    
+    # Activate virtual environment
+    echo ""
+    echo "🚀 Starting options data pull..."
+    source venv/bin/activate
+    
+    # Run the puller
+    if [ "$DATA_MODE" = "mock" ]; then
+        echo "Running in demo mode (no API key)..."
+        python3 databento_options_puller.py \
+            --start-date "$START_DATE" \
+            --end-date "$END_DATE" \
+            --output "$OUTPUT_FILE" \
+            --mock-mode
+    else
+        echo "Running with real Databento data..."
+        python3 databento_options_puller.py \
+            --start-date "$START_DATE" \
+            --end-date "$END_DATE" \
+            --output "$OUTPUT_FILE"
+    fi
+    
+    # Show results
+    echo ""
+    echo "╔══════════════════════════════════════════════════════════╗"
+    echo "║                    Complete! ✅                          ║"
+    echo "╚══════════════════════════════════════════════════════════╝"
+    echo ""
+    echo "📊 Output saved to: $OUTPUT_FILE"
+    echo "📂 Open this file in Excel or Numbers to view your data"
+    
 else
     # First time setup
     echo "🔧 First time setup detected. Installing everything..."
@@ -161,18 +266,22 @@ else
     
     # Make scripts executable
     chmod +x setup_mac.sh
-    chmod +x simple_demo.py
+    chmod +x databento_options_puller.py
+    chmod +x START_HERE.command
     
     # Run setup
     ./setup_mac.sh
     
     echo ""
-    echo "Setup complete! Now let's run a demo..."
+    echo "Setup complete!"
     echo "Press Enter to continue..."
     read
     
-    # Run demo
-    python3 simple_demo.py
+    # Now run the START_HERE.command which has all the interactive features
+    echo ""
+    echo "Launching interactive setup..."
+    ./START_HERE.command
+    exit 0
 fi
 
 echo ""
